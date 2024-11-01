@@ -1,0 +1,23 @@
+[
+    {
+        "ProcessID": 1,
+        "BurstTime": 6,
+        "Priority": 2,
+        "State": "Running",
+        "RemainingTime": 4
+    },
+    {
+        "ProcessID": 2,
+        "BurstTime": 8,
+        "Priority": 1,
+        "State": "Ready",
+        "RemainingTime": 6
+    },
+    {
+        "ProcessID": 3,
+        "BurstTime": 10,
+        "Priority": 3,
+        "State": "Waiting",
+        "RemainingTime": 7
+    }
+]
