@@ -5,20 +5,48 @@ import json
 # Global variables to hold process data and the current clock cycle
 process_data = []
 current_running_index = -1
+waiting_times = {}
+turnaround_times = {}
 
 # Load JSON Data
 def load_process_data():
-    global process_data
+    global process_data, waiting_times, turnaround_times
     with open("process_list.json", "r") as file:
         process_data = json.load(file)
     for process in process_data:
         if process["RemainingTime"] > 0:
             process["State"] = "Ready"  # Initialize all to Ready state
+        # Initialize waiting and turnaround times for each process
+        waiting_times[process["ProcessID"]] = 0
+        turnaround_times[process["ProcessID"]] = 0
+
+# Calculate Waiting and Turnaround Times
+def update_waiting_and_turnaround_times():
+    # Calculate waiting and turnaround times for each completed process
+    total_waiting_time = 0
+    total_turnaround_time = 0
+    completed_processes = 0
+
+    for process in process_data:
+        pid = process["ProcessID"]
+        burst_time = process["BurstTime"]
+        if process["State"] == "Completed":
+            turnaround_times[pid] = burst_time + waiting_times[pid]
+            total_waiting_time += waiting_times[pid]
+            total_turnaround_time += turnaround_times[pid]
+            completed_processes += 1
+
+    # Display averages
+    if completed_processes > 0:
+        avg_waiting_time = total_waiting_time / completed_processes
+        avg_turnaround_time = total_turnaround_time / completed_processes
+        average_waiting_time_label.config(text=f"Avg Waiting Time: {avg_waiting_time:.2f}")
+        average_turnaround_time_label.config(text=f"Avg Turnaround Time: {avg_turnaround_time:.2f}")
 
 # Populate each table based on the process state
 def populate_tables():
     # Clear all tables first
-    for table in [running_processes_table, ready_queue_table, waiting_processes_table]:
+    for table in [running_processes_table, ready_queue_table, waiting_processes_table, program_list_table]:
         table.delete(*table.get_children())
     
     # Populate each table based on the process state
@@ -32,6 +60,13 @@ def populate_tables():
             ready_queue_table.insert("", "end", values=values)
         elif process["State"] == "Waiting":
             waiting_processes_table.insert("", "end", values=values)
+        
+        # Add to program list with Waiting and Turnaround Times
+        program_values = (process["ProcessID"], waiting_times[process["ProcessID"]], turnaround_times[process["ProcessID"]])
+        program_list_table.insert("", "end", values=program_values)
+
+    # Update average waiting and turnaround times
+    update_waiting_and_turnaround_times()
 
 # Load Process Data and Initialize GUI
 def start_os():
@@ -73,6 +108,10 @@ def next_clock_cycle():
     if current_running_index != -1:
         process = process_data[current_running_index]
         process["RemainingTime"] -= 1
+        # Update waiting time for all ready processes
+        for p in process_data:
+            if p["State"] == "Ready":
+                waiting_times[p["ProcessID"]] += 1
         # If remaining time is zero, mark it as completed
         if process["RemainingTime"] == 0:
             process["State"] = "Completed"
@@ -132,6 +171,8 @@ def add_process(popup, process_id, burst_time, priority, remaining_time, cpu, me
         "State": "Ready"  # New process starts in Ready state
     }
     process_data.append(new_process)
+    waiting_times[new_process["ProcessID"]] = 0
+    turnaround_times[new_process["ProcessID"]] = 0
     populate_tables()  # Refresh the tables to include the new process
     popup.destroy()  # Close the popup
 
@@ -171,21 +212,18 @@ waiting_processes_table.grid(row=5, column=0, padx=10, pady=2, sticky='w')
 bottom_block = ttk.Frame(root, width=1000)
 bottom_block.pack(side=tk.BOTTOM, fill=tk.BOTH, expand=True, padx=10, pady=10)
 
-# Scheduler Controls
+# Scheduler Controls Section
 scheduler_frame = ttk.LabelFrame(bottom_block, text="Scheduler Policies")
-scheduler_frame.grid(row=0, column=0, padx=10, pady=5, sticky="w")
+scheduler_frame.grid(row=0, column=0, padx=10, pady=5, sticky="nw")
 
-# Set initial value to "Round Robin (RR)"
-scheduler_var = tk.StringVar(value="Round Robin (RR)")
+scheduler_var = tk.StringVar(value="Round Robin (RR)")  # Pre-select Round Robin
 policies = ["First-Come, First-Served (FCFS)", "Shortest Job First (SJF)", "Round Robin (RR)", "Priority", "Earliest Deadline First (EDF)"]
-
-# Create radio buttons for each policy
 for policy in policies:
     tk.Radiobutton(scheduler_frame, text=policy, variable=scheduler_var, value=policy).pack(anchor=tk.W)
 
 # OS Control Section
 os_control_frame = ttk.LabelFrame(bottom_block, text="OS Control")
-os_control_frame.grid(row=0, column=1, padx=10, pady=5, sticky="w")
+os_control_frame.grid(row=0, column=1, padx=10, pady=5, sticky="nw")
 
 start_button = tk.Button(os_control_frame, text="Start", width=15, command=start_os)
 start_button.pack(padx=5, pady=5)
@@ -199,18 +237,26 @@ next_clock_button.pack(padx=5, pady=5)
 
 # Program List Section
 program_list_frame = ttk.LabelFrame(bottom_block, text="Program List")
-program_list_frame.grid(row=0, column=2, padx=10, pady=5, sticky="w")
+program_list_frame.grid(row=0, column=2, padx=10, pady=5, sticky="nw")
 
-program_list_table = ttk.Treeview(program_list_frame, columns=("Name", "Priority", "Pages"), height=3)
-program_list_table.heading("Name", text="Program Name")
-program_list_table.heading("Priority", text="Priority")
-program_list_table.heading("Pages", text="Pages")
+# Table to display ProcessID, Waiting Time, and Turnaround Time
+program_list_table = ttk.Treeview(program_list_frame, columns=("ProcessID", "Waiting Time", "Turnaround Time"), height=5)
+program_list_table.heading("ProcessID", text="Process ID")
+program_list_table.heading("Waiting Time", text="Waiting Time")
+program_list_table.heading("Turnaround Time", text="Turnaround Time")
 program_list_table['show'] = 'headings'
 program_list_table.pack(pady=5)
 
-# Control Buttons
+# Labels to display average waiting and turnaround times
+average_waiting_time_label = tk.Label(program_list_frame, text="Avg Waiting Time: 0", font=small_font)
+average_waiting_time_label.pack()
+
+average_turnaround_time_label = tk.Label(program_list_frame, text="Avg Turnaround Time: 0", font=small_font)
+average_turnaround_time_label.pack()
+
+# Control Buttons Section
 control_frame = tk.Frame(bottom_block)
-control_frame.grid(row=1, column=0, pady=5, padx=5, sticky='w')
+control_frame.grid(row=1, column=0, pady=5, padx=5, sticky="w")
 
 clear_button = tk.Button(control_frame, text="CLEAR", width=10, font=small_font)
 clear_button.grid(row=0, column=0, padx=5)
