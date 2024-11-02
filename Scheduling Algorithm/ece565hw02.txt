@@ -1,0 +1,121 @@
+# list of alive processes, each with its Process Control Block (PCB)
+
+
+# Process mgmt info
+process State:            Ready
+process identifier (PID): 1
+parent process (pPID):    0
+Program Counter (PC)/Instruction Pointer (IP): 1000
+# CPU registers
+AX (primary accumulator): 1
+BX (base register):       1
+CX (count register):      1
+DX (data register):       1
+Stack Pointer (SP):       1100
+Base Pointer (BP):        1200
+Source Index (SI):        1300
+Destination Index (DI):   1350
+# CPU scheduling info
+Priority:                 1
+Quantum:                  4
+Burst:                    8
+# Memory mgmt info
+code segment register (CS):  1
+data segment register (DS):  1 
+stack segment register (SS): 1
+extra segment register (ES): 1
+# File mgmt info
+file pointer (FP):        0
+# Accounting info
+Start time:               00:00:01
+CPU used:                 4
+
+
+# Process mgmt info
+process State:            Ready
+process identifier (PID): 11
+parent process (pPID):    1
+Program Counter (PC)/Instruction Pointer (IP): 2000
+# CPU registers
+AX (primary accumulator): 11
+BX (base register):       11
+CX (count register):      11
+DX (data register):       11
+Stack Pointer (SP):       2100
+Base Pointer (BP):        2200
+Source Index (SI):        2300
+Destination Index (DI):   2350
+# CPU scheduling info
+Priority:                 2
+Quantum:                  4
+Burst:                    12
+# Memory mgmt info
+code segment register (CS):  2
+data segment register (DS):  2 
+stack segment register (SS): 2
+extra segment register (ES): 2
+# File mgmt info
+file pointer (FP):        0
+# Accounting info
+Start time:               00:00:02
+CPU used:                 4
+
+
+# Process mgmt info
+process State:            Blocked
+process identifier (PID): 12
+parent process (pPID):    1
+Program Counter (PC)/Instruction Pointer (IP): 3000
+# CPU registers
+AX (primary accumulator): 12
+BX (base register):       12
+CX (count register):      12
+DX (data register):       12
+Stack Pointer (SP):       3100
+Base Pointer (BP):        3200
+Source Index (SI):        3300
+Destination Index (DI):   3350
+# CPU scheduling info
+Priority:                 3
+Quantum:                  4
+Burst:                    16
+# Memory mgmt info
+code segment register (CS):  3
+data segment register (DS):  3 
+stack segment register (SS): 3
+extra segment register (ES): 3
+# File mgmt info
+file pointer (FP):        0
+# Accounting info
+Start time:               00:00:03
+CPU used:                 4
+
+
+# Process mgmt info
+process State:            Running
+process identifier (PID): 111
+parent process (pPID):    11
+Program Counter (PC)/Instruction Pointer (IP): 4000
+# CPU registers
+AX (primary accumulator): 111
+BX (base register):       111
+CX (count register):      111
+DX (data register):       111
+Stack Pointer (SP):       4100
+Base Pointer (BP):        4200
+Source Index (SI):        4300
+Destination Index (DI):   4350
+# CPU scheduling info
+Priority:                 4
+Quantum:                  4
+Burst:                    8
+# Memory mgmt info
+code segment register (CS):  4
+data segment register (DS):  4 
+stack segment register (SS): 4
+extra segment register (ES): 4
+# File mgmt info
+file pointer (FP):        0
+# Accounting info
+Start time:               00:00:04
+CPU used:                 0
