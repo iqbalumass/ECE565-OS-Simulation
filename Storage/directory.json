@@ -1,0 +1,27 @@
+[
+    {
+        "file": "count",
+        "start": 0,
+        "length": 2
+    },
+    {
+        "file": "tr",
+        "start": 14,
+        "length": 3
+    },
+    {
+        "file": "mail",
+        "start": 19,
+        "length": 6
+    },
+    {
+        "file": "list",
+        "start": 28,
+        "length": 4
+    },
+    {
+        "file": "f",
+        "start": 6,
+        "length": 2
+    }
+]
