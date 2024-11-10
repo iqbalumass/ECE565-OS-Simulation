@@ -89,7 +89,7 @@ def update_file():
             global reads, writes
             add(file_name, start, length, position=pos)  # Parameters are placeholders
         else:
-            remove(file_name, start, length, position=pos, reads=0, writes=0)  # Parameters are placeholders
+            remove(file_name, start, length, position=pos)  # Parameters are placeholders
 
         update_window.destroy()  # Close the update window
 
@@ -131,6 +131,207 @@ def add(file_name, start, length, position):
 
         else:
             print('No space')
+    
+    
+    
+    
+    
+    # Check for adding at the "middle"
+    elif position == "middle":
+        print("there will always be shifting if there is space-middle case")
+        print('\\\\\original length of odd and even case for middle needs to be handled\\\\\\ ')
+        
+        if start == 0:
+            target = start + (length // 2)
+        elif start!=0 and start+length==32:
+            target = start + (length // 2) - 1
+        else:
+            target=start + (length // 2) 
+
+        ### case count: if length is 2, 2//2=1. if length is 3, 3//2=1  && case f: if if length=2, 2//2=1. if  length=3, 3//2=1 &&& case list= length=4//2=2
+        print(target) ### case count: if start=0, target becomes 0+1=1    && case f: if start=6, target becomes 6+1=7 && case list, if start=28, target id 28+2=30
+        print(f'We have to move block item from target block {target}')
+        print(f'Making it a list as we can shift eitheri left or right')
+        num_of_blocks_to_move=[length//2, (length//2)+1] #if file length is even, we move length//2 blocks, else we move length//2+1 blocks
+
+        '''
+        Case 1: There is space to the right. i.e. disk_block[start+length] is None.. for count, disk_block[0+2]=2, for f,disk_block[6+2]=8, for list, disk_block[28+4]=32
+        Case 2: There is space to the left, i.e., disk_block[start-1] is None.. for count, disk_block[0-1]=-1 for disk_block[6-1]=5 and for list, disk_blocl[28-1]=27
+        Case 3: No space at all        
+        '''
+        if start==0:
+            '''
+            we try and see if Case 1 applies
+            '''
+            if disk_blocks[start + length]==None:
+                print(f'Block {start + length} is unallocated')
+                print('shift right')
+                if length%2==0:
+                    print(f'moving {num_of_blocks_to_move[0]} blocks')
+                    print(f"Target is start+(length//2)")
+                    for i in range(start+length,target,-1):
+                        print(f'moving block {i-1} to block {i}')
+                        disk_blocks[i]=disk_blocks[i-1]
+                        disk_blocks[i-1]=None
+                        reads=reads+1
+                        writes=writes+1
+                    print('Allocation space made, now insert at target') 
+                    print(f'disk block {target} has {disk_blocks[target]}')  
+                    disk_blocks[target]=file_name
+                    writes=writes+1
+                    print(f'disk block {target} has {disk_blocks[target]}')
+                else:
+                    print(f'moving {num_of_blocks_to_move[1]} blocks')
+                    print(f"Target is start+(length//2)")
+                    for i in range(start+length,target,-1):
+                        print(f'moving block {i-1} to block {i}')
+                        disk_blocks[i]=disk_blocks[i-1]
+                        disk_blocks[i-1]=None
+                        reads=reads+1
+                        writes=writes+1
+                    print('Allocation space made, now insert at target')   
+                    print(f'disk block {target} has {disk_blocks[target]}')
+                    disk_blocks[target]=file_name
+                    print(f'disk block {target} has {disk_blocks[target]}')
+
+        elif start+length==32:
+            '''
+            we try and see if Case 2 applies
+            ''' 
+            if disk_blocks[start-1]==None:
+                print(f'Block {start-1} is unallocated')
+                print('shift left')
+                if length%2==0:
+                    print(f'moving {num_of_blocks_to_move[0]} blocks')
+                    print(f"Target is start+(length//2)")
+                    for i in range(start-1,target,1):
+                        print(f'moving block {i+1} to block {i}')
+                        disk_blocks[i]=disk_blocks[i+1]
+                        disk_blocks[i+1]=None
+                        reads=reads+1
+                        writes=writes+1
+                    print('Allocation space made, now insert at target') 
+                    print(f'disk block {target} has {disk_blocks[target]}')  
+                    disk_blocks[target]=file_name
+                    writes=writes+1
+                    print(f'disk block {target} has {disk_blocks[target]}')
+
+                else:
+                    print(f'moving {num_of_blocks_to_move[1]} blocks')
+                    print(f"Target is start+(length//2)")
+                    for i in range(start-1,target,1):
+                        print(f'moving block {i+1} to block {i}')
+                        disk_blocks[i]=disk_blocks[i+1]
+                        disk_blocks[i+1]=None
+                        reads=reads+1
+                        writes=writes+1
+                    print('Allocation space made, now insert at target') 
+                    print(f'disk block {target} has {disk_blocks[target]}')  
+                    disk_blocks[target]=file_name
+                    print(f'disk block {target} has {disk_blocks[target]}')
+        else:
+            '''
+            start>0 and start+length<32, prefer to apply Case 1 than Case 2
+            '''
+            if disk_blocks[start + length]==None:
+                print(f'Block {start + length} is unallocated')
+                print('shift right')
+                print(f'target is {target}')
+                if length%2==0:
+                    print(f'moving {num_of_blocks_to_move[0]} blocks')
+                    print(f"Target is start+(length//2)")
+                    for i in range(start+length,target,-1):
+                        print(f'moving block {i-1} to block {i}')
+                        disk_blocks[i]=disk_blocks[i-1]
+                        disk_blocks[i-1]=None
+                        reads=reads+1
+                        writes=writes+1
+                    print('Allocation space made, now insert at target') 
+                    print(f'disk block {target} has {disk_blocks[target]}')  
+                    disk_blocks[target]=file_name
+                    writes=writes+1
+                    print(f'disk block {target} has {disk_blocks[target]}')
+
+                else:
+                    print(f'moving {num_of_blocks_to_move[1]} blocks')
+                    print(f"Target is start+(length//2)")
+                    for i in range(start+length,target,-1):
+                        print(f'moving block {i-1} to block {i}')
+                        disk_blocks[i]=disk_blocks[i-1]
+                        disk_blocks[i-1]=None
+                        reads=reads+1
+                        writes=writes+1
+                    print('Allocation space made, now insert at target')   
+                    print(f'disk block {target} has {disk_blocks[target]}')
+                    disk_blocks[target]=file_name
+                    print(f'disk block {target} has {disk_blocks[target]}')
+
+            
+            elif disk_blocks[start - 1]==None:
+                print(f'Block {start-1} is unallocated')
+                print('shift left')
+
+                if length%2==0:
+                    print(f'moving {num_of_blocks_to_move[0]} blocks')
+                    print(f"Target is start+(length//2)")
+                    for i in range(start-1,target,1):
+                        print(f'moving block {i+1} to block {i}')
+                        disk_blocks[i]=disk_blocks[i+1]
+                        disk_blocks[i+1]=None
+                        reads=reads+1
+                        writes=writes+1
+                    print('Allocation space made, now insert at target') 
+                    print(f'disk block {target} has {disk_blocks[target]}')  
+                    disk_blocks[target]=file_name
+                    print(f'disk block {target} has {disk_blocks[target]}')
+                else:
+                    print(f'moving {num_of_blocks_to_move[1]} blocks')
+                    print(f"Target is start+(length//2)")
+                    for i in range(start-1,target,1):
+                        print(f'moving block {i+1} to block {i}')
+                        disk_blocks[i]=disk_blocks[i+1]
+                        disk_blocks[i+1]=None
+                        reads=reads+1
+                        writes=writes+1
+                    print('Allocation space made, now insert at target') 
+                    print(f'disk block {target} has {disk_blocks[target]}')  
+                    disk_blocks[target]=file_name
+                    print(f'disk block {target} has {disk_blocks[target]}')
+
+            else:
+                print('NO SPACE')
+
+        print(f"Read:{reads} and Writes:{writes}")
+
+    
+    
+
+     # Check for adding at the "end"
+    
+    
+    
+    
+    elif position == "end":
+        
+        if start + length < total_blocks and disk_blocks[start + length] is None :
+            print('Add block to ending need no shifting')
+            disk_blocks[start + length] = file_name
+            highlight_index = start + length  # Highlight the added block
+            writes=writes+1
+        elif start - 1 > 0 and disk_blocks[start - 1] is None:
+            print('Add block to ending needs shifting')
+            for i in range(start+length - 1, start - 1, -1):
+                print(f'move block {i} to {i-1}')
+                disk_blocks[i] = disk_blocks[i - 1] if i > start else None
+                reads=reads+1
+                writes=writes+1
+            disk_blocks[start-1] = file_name
+            writes=writes+1
+            highlight_index = start+length  # Highlight the added block at end position
+        else:
+            print('NO SPACE')
+    
+    
     print(f"Read:{reads} and Writes:{writes}")
     update_gui_blocks()
     update_read_write_labels()  # Update the reads and writes display
@@ -139,6 +340,45 @@ def add(file_name, start, length, position):
 
 def remove(file_name, start, length, position):
     global disk_blocks, reads, writes
+    
+
+
+    if position=='beginning':
+        print(f'remove block at {start}')
+        disk_blocks[start]=None
+        highlight_index=start
+        for i in range(start, start+length-1,1):
+            print(f'move block {i+1} to {i}')
+            disk_blocks[i]=disk_blocks[i+1]
+            disk_blocks[i+1]=None
+            reads=reads+1
+            writes=writes+1
+        disk_blocks[start + length-1]=None
+        print(f'block {start+length} is now {disk_blocks[start + length-1]}')
+    elif position=='middle':
+        print(f'remove block at {start+(length//2)}') 
+        '''
+        After removing we gotta move the blocks.   '''
+        target=start+(length//2)
+        disk_blocks[target]=None
+        for i in range(target, start+length-1,1):
+            print(f'move block {i+1} to {i}')
+            disk_blocks[i]=disk_blocks[i+1]
+            disk_blocks[i+1]=None
+            reads=reads+1
+            writes=writes+1
+        disk_blocks[start + length-1]=None
+        print(f'block {start+length-1} is now {disk_blocks[start + length-1]}')
+        #writes=writes+1
+        highlight_index=target
+    else: #position=end
+        print(f'remove block at {start+length-1}')
+        disk_blocks[start + length-1]=None
+        highlight_index=start+length-1
+    length=length-1
+
+    
+    print(f"Read:{reads} and Writes:{writes}")
     update_gui_blocks()
     update_read_write_labels() 
     pass  # Implement logic here later
