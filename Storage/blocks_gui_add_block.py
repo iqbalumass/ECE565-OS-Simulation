@@ -2,6 +2,9 @@ import json
 import tkinter as tk
 from tkinter import messagebox, ttk
 
+reads=0
+writes=0
+
 # Load JSON data into memory
 def load_data(filename='directory.json'):
     try:
