@@ -48,8 +48,9 @@ def add(file_name, start, length, position, reads, writes):
     
     # Check for adding at the "beginning"
     if position == "beginning":
-        print('Add block to beginning without shifting')
+        
         if start - 1 > 0 and disk_blocks[start - 1] is None:
+            print('Add block to beginning without shifting')
             disk_blocks[start - 1] = file_name
             highlight_index = start - 1  # Highlight this block
             writes=writes+1
@@ -63,6 +64,16 @@ def add(file_name, start, length, position, reads, writes):
                     writes=writes+1
                 highlight_index = start  # Highlight the added block at start
             writes=writes+1
+        elif start-1<0:
+            print('Add block to beginning with shifting')
+            if start + length < total_blocks and disk_blocks[start + length] is None:
+                for i in range(start+length, start, -1):
+                    disk_blocks[i] = disk_blocks[i - 1] if i > start else None
+                    reads=reads+1
+                    writes=writes+1
+                highlight_index = start  # Highlight the added block at start
+            writes=writes+1
+
         else:
             print('No space')
         print(f"Read:{reads} and Writes:{writes}")
@@ -343,7 +354,7 @@ Test case on f: Please check
 #add('f', 6, 2, 'end', reads, writes) # Ans: read=0, writes=1
 #remove('f', 6, 2, 'beginning', reads, writes)# Ans: reads=1,writes=1
 #remove('f', 6, 2, 'middle', reads, writes)  #Ans: reads=1, writes=1
-remove('f', 6, 2, 'end', reads, writes) #Ans: reads=0 , writes=0
+#remove('f', 6, 2, 'end', reads, writes) #Ans: reads=0 , writes=0
 
 # To print the entire disk block status:
 #display_disk_blocks()
