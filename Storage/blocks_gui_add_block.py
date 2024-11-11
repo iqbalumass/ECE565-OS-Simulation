@@ -2,6 +2,9 @@ import json
 import tkinter as tk
 from tkinter import messagebox, ttk
 
+reads=0
+writes=0
+
 # Load JSON data into memory
 def load_data(filename='directory.json'):
     try:
@@ -33,7 +36,7 @@ def load_and_display_blocks():
         occupied_blocks = list(range(start, start + length))
         for block in occupied_blocks:
             if 0 <= block < 32:  # Ensure block is within valid range
-                block_buttons[block].config(bg="red", text=f"{block}\n(Occupied)")
+                block_buttons[block].config(bg="light blue", text=f"{block}\n(Occupied)")
 
 # Update the JSON data based on user input
 def update_file():
@@ -113,11 +116,11 @@ def update_file():
 
 # Set up the main application window
 root = tk.Tk()
-root.title("Block Occupancy Viewer")
-root.geometry("400x400")
+root.title("Disk Block Occupancy Viewer")
+root.geometry("800x400")
 
 # Instructions label
-label = tk.Label(root, text="Block Occupancy (Red = Occupied, White = Free)")
+label = tk.Label(root, text="Block Occupancy (Blue = Occupied, White = Free)")
 label.pack(pady=10)
 
 # Frame to hold the block buttons
@@ -132,7 +135,7 @@ for i in range(32):
     block_buttons.append(btn)
 
 # Load Blocks button to initialize display
-load_button = tk.Button(root, text="Load Blocks", command=load_and_display_blocks)
+load_button = tk.Button(root, text="Load Blocks from directory.json", command=load_and_display_blocks)
 load_button.pack(pady=5)
 
 # Update File button to open update options
