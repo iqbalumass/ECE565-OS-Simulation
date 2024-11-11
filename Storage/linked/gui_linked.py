@@ -209,6 +209,53 @@ class BlockGUI:
                 self.block_labels[new_block_index].config(bg="light blue")
                 
 
+            if position=="middle":
+                
+                target=length//2
+
+                #might not occur but still keeping this around
+                if target==0:
+                    add(file_name, start,length, position)
+                    return
+
+                # Traverse the list to the block just before the desired position
+                current_block_index = start
+                previous_block_index = None
+                count = 0
+
+                while current_block_index is not None and count < target:
+                    print(f'current block is Block {current_block_index} points to block {self.blocks[current_block_index].next_block} ')
+                    previous_block_index = current_block_index
+                    current_block_index = self.blocks[current_block_index].next_block
+                    count += 1
+                    reads=reads+1
+
+                if current_block_index is None and count < target:
+                # Position is out of bounds (larger than the list length)
+                    print("Position out of bounds.")
+
+                # Pick a free block from null_file_indexes
+                new_block_index = self.null_file_indexes.pop()
+                print(f'new_block_index is {new_block_index}')
+    
+                # Assign file data to the new block
+                self.blocks[new_block_index].file = file_name
+                self.blocks[new_block_index].next_block = current_block_index  # The new block points to the current block at position
+                
+                writes=writes+1
+                if previous_block_index is not None:
+                    self.blocks[previous_block_index].next_block = new_block_index  # The previous block points to the new block
+                    writes=writes+1
+                print(f'Reads: {reads}, Writes {writes}')
+                print(self.blocks[new_block_index].next_block)
+                print(self.blocks[current_block_index].next_block)
+
+                ###Changes to GUI
+                self.update_block_label(new_block_index)
+                self.update_block_label(current_block_index)
+                self.update_block_label(previous_block_index)
+                self.block_labels[new_block_index].config(bg="light blue")
+
             self.update_read_write_label()
 
         def remove(file_name, start, length, position):
@@ -272,6 +319,59 @@ class BlockGUI:
                 self.update_block_label(current_block_index)
                 self.block_labels[current_block_index].config(bg="white")
 
+
+            if position=="middle":
+                target=length//2
+
+                #might not occur but still keeping this around
+                if target==0:
+                    add(file_name, start,length, position)
+                    return
+
+                # Traverse the list to the block just before the desired position
+                current_block_index = start
+                previous_block_index = None
+                count = 0
+
+                while current_block_index is not None and count < target:
+                    print(f'current block is Block {current_block_index} points to block {self.blocks[current_block_index].next_block} ')
+                    previous_block_index = current_block_index
+                    current_block_index = self.blocks[current_block_index].next_block
+                    count += 1
+                    reads=reads+1
+
+                if current_block_index is None and count < target:
+                # Position is out of bounds (larger than the list length)
+                    print("Position out of bounds.")
+
+
+                # Now current_block_index is the block to remove
+                # previous_block_index is the block before it       
+                
+                # Update the previous block's next_block to skip the current block
+                if previous_block_index is not None:
+                    self.blocks[previous_block_index].next_block = self.blocks[current_block_index].next_block
+
+                writes=writes+1
+
+                #Free the current block
+                self.blocks[current_block_index].file=None
+                self.blocks[current_block_index].next_block=None
+                self.null_file_indexes.add(current_block_index)
+                
+                
+    
+        
+
+                print(f'Reads: {reads}, Writes {writes}')
+                
+
+                ###Changes to GUI
+                
+                self.update_block_label(current_block_index)
+                self.update_block_label(previous_block_index)
+                self.block_labels[current_block_index].config(bg="white")
+
             self.update_read_write_label()
 if __name__ == "__main__":
     root = tk.Tk()
@@ -283,20 +383,20 @@ if __name__ == "__main__":
 Some Test CASES:
 '''
 #add('list',28,4,'beginning', reads, writes) #Ans: reads=0, writes=1
-#add('list',28,4,'middle', reads, writes) #Ans: reads=, writes=
+#add('list',28,4,'middle', reads, writes) #Ans: reads=2, writes=2
 #add('list',28,4,'end', reads, writes) #Ans: reads=4 ,writes=2
 #remove('list',28,4,'beginning', reads, writes) #Ans: reads=0,writes=0
-#remove('list',28,4,'middle', reads, writes) #Ans:reads=, writes
+#remove('list',28,4,'middle', reads, writes) #Ans:reads=2, writes=1
 #remove('list',28,4,'end', reads, writes) #Ans: reads=3,writes=1
 
 '''
 Test case on count: Please check
 '''
 #add('count', 0, 2, 'beginning', reads, writes)# Ans: read=0, writes=1
-#add('count', 0, 2, 'middle', reads, writes)   #Ans: read= , writes=
+#add('count', 0, 2, 'middle', reads, writes)   #Ans: read=1 , writes=2
 #add('count', 0, 2, 'end', reads, writes) # Ans: read=2, writes=2
 #remove('count', 0, 2, 'beginning', reads, writes)# Ans: reads=0,writes=0
-#remove('count', 0, 2, 'middle', reads, writes)  #Ans: reads=, writes=
+#remove('count', 0, 2, 'middle', reads, writes)  #Ans: reads=1, writes=1
 #remove('count', 0, 2, 'end', reads, writes) #Ans: reads=1 , writes=1
 
 
@@ -305,8 +405,8 @@ Test case on count: Please check
 Test case on f: Please check
 '''
 #add('f', 6, 2, 'beginning', reads, writes)# Ans: read=0, writes=1
-#add('f', 6, 2, 'middle', reads, writes)   #Ans: read= , writes=
+#add('f', 6, 2, 'middle', reads, writes)   #Ans: read=1 , writes=2
 #add('f', 6, 2, 'end', reads, writes) # Ans: read=2, writes=2
 #remove('f', 6, 2, 'beginning', reads, writes)# Ans: reads=0,writes=0
-#remove('f', 6, 2, 'middle', reads, writes)  #Ans: reads=, writes=
+#remove('f', 6, 2, 'middle', reads, writes)  #Ans: reads=1, writes=1
 #remove('f', 6, 2, 'end', reads, writes) #Ans: reads=1 , writes=1
