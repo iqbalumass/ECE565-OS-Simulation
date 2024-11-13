@@ -1,10 +1,12 @@
 import tkinter as tk
 from tkinter import ttk
 import json
+import matplotlib.pyplot as plt
 
 # Global variables to hold process data and the current clock cycle
 process_data = []
 current_running_index = -1
+gantt_chart_data = []  # To store the Gantt chart data
 
 # Load JSON Data
 def load_process_data():
@@ -38,6 +40,16 @@ def start_os():
     load_process_data()
     populate_tables()
 
+# Collect data for Gantt chart
+def record_gantt_chart_data(clock_cycle, process_id, end_time=False):
+    global gantt_chart_data
+    if end_time:
+        # Update the last entry with the end time
+        gantt_chart_data[-1] = (gantt_chart_data[-1][0], gantt_chart_data[-1][1], clock_cycle)
+    else:
+        # Append the start time and process ID
+        gantt_chart_data.append((process_id, clock_cycle))
+
 # Move to the Next Clock Cycle
 def next_clock_cycle():
     global current_running_index, process_data
@@ -45,6 +57,8 @@ def next_clock_cycle():
     # Move the previous running process to "Ready" state if it still has remaining time
     if current_running_index != -1 and process_data[current_running_index]["RemainingTime"] > 0:
         process_data[current_running_index]["State"] = "Ready"
+
+        record_gantt_chart_data(len(gantt_chart_data), process_data[current_running_index]["ProcessID"], end_time=True)
 
     # Find the next process with remaining time to run in this cycle
     found_next_process = False
@@ -66,20 +80,64 @@ def next_clock_cycle():
             # If all processes are completed, reset the running index and exit the function
             current_running_index = -1
             print("All processes have completed.")
+            
             populate_tables()  # Update the tables one last time
+            show_gantt_chart() # Show Gnatt Chart after all processes are completed
             return
 
     # Process the current running process by reducing its RemainingTime by 1
     if current_running_index != -1:
         process = process_data[current_running_index]
         process["RemainingTime"] -= 1
+        record_gantt_chart_data(len(gantt_chart_data), process["ProcessID"])
+
         # If remaining time is zero, mark it as completed
         if process["RemainingTime"] == 0:
             process["State"] = "Completed"
+
+            record_gantt_chart_data(len(gantt_chart_data), process["ProcessID"], end_time=True)
             current_running_index = -1  # Reset to find the next process in the next cycle
 
     # Refresh the tables to reflect the current process states
     populate_tables()
+
+
+# Collect data for Gantt chart
+def show_gantt_chart():
+    plt.figure(figsize=(12, 2))
+    plt.title("Gantt Chart")
+    plt.xlabel("Clock Cycles")
+    plt.yticks([1], ["Processes"])
+
+    process_intervals = {}
+    running_times = []  # To capture x-tick positions
+    process_labels = []  # To capture process IDs for each clock cycle
+    color_map = {1: 'tab:blue', 2: 'tab:orange', 3: 'tab:green'}  # Color mapping for processes
+    print(f"gantt_chart_data: {gantt_chart_data}")
+
+    # Create intervals for each process based on gantt_chart_data
+    for process_id, start_time, *end_time in gantt_chart_data:
+        if process_id not in process_intervals:
+            process_intervals[process_id] = []
+        # Handle the case where end_time might not be provided (process hasn't completed in the data yet)
+        if end_time:
+            end_time = end_time[0]
+            process_intervals[process_id].append((start_time, end_time))
+            running_times.append(start_time)
+            running_times.append(end_time)
+            process_labels.append(f'P{process_id}')
+    
+    # Plot each process interval on the Gantt chart
+    for process_id, times in process_intervals.items():
+        for start_time, end_time in times:
+            plt.broken_barh([(start_time, end_time - start_time)], (0.5, 0.9), facecolors=color_map[process_id])
+            plt.text((start_time + end_time) / 2, 1, f'P{process_id}', va='center', ha='center', color='white')
+
+    # Set the x-ticks at every time unit where a process runs, labeled with process IDs
+    plt.xticks(range(min(running_times), max(running_times) + 1))
+
+    plt.tight_layout()
+    plt.show()
 
 # Function to open a popup for creating a new process
 def create_process_popup():
