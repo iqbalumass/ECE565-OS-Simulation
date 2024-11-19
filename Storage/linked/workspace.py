@@ -3,25 +3,20 @@ from tkinter import StringVar, Toplevel, messagebox
 import json
 from tkinter import ttk
 
-import sys
-import os
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from block import BLOCK, BlockGUI
-
 
 reads=0
 writes=0
 
-class LinkedAllocationBLOCK(BLOCK):
+class BLOCK:
     def __init__(self, file, next_block):
         self.file = file
         self.next_block = next_block
 
-class LinkedAllocationBlockGUI(BlockGUI):
+class BlockGUI:
     def __init__(self, root):
         self.root = root
-        # self.root.title("Disk Block Management")
-        # self.root.geometry("800x500")
+        self.root.title("Disk Block Management")
+        self.root.geometry("800x500")
 
         # Instructions label
         label = tk.Label(self.root, text="Block Occupancy (Blue = Occupied, White = Free)")
@@ -55,10 +50,10 @@ class LinkedAllocationBlockGUI(BlockGUI):
 
     def load_entries(self):
         try:
-            with open("linked/block_entries.json", "r") as file:
+            with open("block_entries.json", "r") as file:
                 data = json.load(file)
 
-            with open("linked/directory.json", "r") as f:
+            with open("directory.json", "r") as f:
                 self.directory_data = json.load(f)
 
             # Set to track indexes where file is null
@@ -67,7 +62,7 @@ class LinkedAllocationBlockGUI(BlockGUI):
             # Initialize BLOCK objects from JSON data
             for i in range(32):
                 block_data = data.get(str(i), {"file": None, "next_block": None})
-                self.blocks[i] = LinkedAllocationBLOCK(block_data["file"], block_data["next_block"])
+                self.blocks[i] = BLOCK(block_data["file"], block_data["next_block"])
                 self.update_block_label(i)
 
                 
@@ -150,16 +145,16 @@ class LinkedAllocationBlockGUI(BlockGUI):
             # Call add or remove function based on action_type
             if action_type == "Add":
                 global reads, writes
-                self.add(file_name, start, length, position=pos)  # Parameters are placeholders
+                add(file_name, start, length, position=pos)  # Parameters are placeholders
             else:
-                self.remove(file_name, start, length, position=pos)  # Parameters are placeholders
+                remove(file_name, start, length, position=pos)  # Parameters are placeholders
 
             update_window.destroy()  # Close the update window
 
         update_button = tk.Button(update_window, text="Update File", command=confirm_update)
         update_button.grid(row=3, column=0, columnspan=4, pady=10)  # Adjusted position
         
-        def add(self,file_name, start, length, position):
+        def add(file_name, start, length, position):
             global reads, writes
             current_block_index = start
 
@@ -242,7 +237,7 @@ class LinkedAllocationBlockGUI(BlockGUI):
                 # Pick a free block from null_file_indexes
                 new_block_index = self.null_file_indexes.pop()
                 print(f'new_block_index is {new_block_index}')
-
+    
                 # Assign file data to the new block
                 self.blocks[new_block_index].file = file_name
                 self.blocks[new_block_index].next_block = current_block_index  # The new block points to the current block at position
@@ -380,7 +375,7 @@ class LinkedAllocationBlockGUI(BlockGUI):
             self.update_read_write_label()
 if __name__ == "__main__":
     root = tk.Tk()
-    app = LinkedAllocationBlockGUI(root)
+    app = BlockGUI(root)
     root.mainloop()
 
 
