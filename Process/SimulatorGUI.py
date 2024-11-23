@@ -13,9 +13,9 @@ turnaround_times = {}
 def load_process_data():
     global process_data, waiting_times, turnaround_times
     process_data = [
-        {"ProcessID": 1, "BurstTime": 6, "Priority": 2, "RemainingTime": 6, "State": "Ready", "ProgramCounter": 0, "OpenFiles": 2, "AX": 10, "BX": 20},
-        {"ProcessID": 2, "BurstTime": 8, "Priority": 1, "RemainingTime": 8, "State": "Ready", "ProgramCounter": 0, "OpenFiles": 1, "AX": 15, "BX": 25},
-        {"ProcessID": 3, "BurstTime": 10, "Priority": 3, "RemainingTime": 10, "State": "Ready", "ProgramCounter": 0, "OpenFiles": 0, "AX": 5, "BX": 10},
+        {"ProcessID": 1, "BurstTime": 6, "Priority": 2, "RemainingTime": 6, "State": "Ready", "ProgramCounter": 2, "OpenFiles": 2, "AX": 10, "BX": 20},
+        {"ProcessID": 2, "BurstTime": 8, "Priority": 1, "RemainingTime": 8, "State": "Ready", "ProgramCounter": 3, "OpenFiles": 1, "AX": 15, "BX": 25},
+        {"ProcessID": 3, "BurstTime": 10, "Priority": 3, "RemainingTime": 10, "State": "Ready", "ProgramCounter": 4, "OpenFiles": 0, "AX": 5, "BX": 10},
     ]
     for process in process_data:
         waiting_times[process["ProcessID"]] = 0
@@ -112,7 +112,6 @@ def record_gantt_chart_data(clock_cycle, process_id, end_time=False):
         # Append the start time and process ID
         gantt_chart_data.append((process_id, clock_cycle))
 
-
 # Move to the Next Clock Cycle
 def next_clock_cycle():
     global current_running_index, process_data
@@ -163,8 +162,7 @@ def next_clock_cycle():
     update_waiting_and_turnaround_times()
     populate_tables()
 
-
-
+# Show Gantt Chart
 def show_gantt_chart():
     plt.figure(figsize=(12, 2))
     plt.title("Gantt Chart")
@@ -179,39 +177,51 @@ def show_gantt_chart():
     for process_id, start_time, *end_time in gantt_chart_data:
         if process_id not in process_intervals:
             process_intervals[process_id] = []
-        # Handle the case where end_time might not be provided (process hasn't completed in the data yet)
         if end_time:
             end_time = end_time[0]
             process_intervals[process_id].append((start_time, end_time))
-            running_times.extend([start_time, end_time])  # Collect start and end times
+            running_times.extend([start_time, end_time])
 
     # Plot each process interval on the Gantt chart
     for process_id, times in process_intervals.items():
         for start_time, end_time in times:
             plt.broken_barh([(start_time, end_time - start_time)], (0.5, 0.9),
-                            facecolors=color_map.get(process_id, 'tab:gray'))  # Default color if process_id not mapped
+                            facecolors=color_map.get(process_id, 'tab:gray'))
             plt.text((start_time + end_time) / 2, 1, f'P{process_id}', va='center', ha='center', color='white')
 
-    # Adjust x-ticks dynamically based on collected running times
     if running_times:
         plt.xticks(range(min(running_times), max(running_times) + 1))
 
     plt.tight_layout()
     plt.show()
 
-
 # Add Process Function
-def add_process(popup, process_id, burst_time, priority, remaining_time, cpu, memory):
+# Add Process Function
+def add_process(popup, process_id, burst_time, priority, remaining_time, cpu, memory, program_counter, open_files, ax, bx):
     global process_data
+
+    # Validate and handle empty or optional inputs
+    def to_int(value, default=0):
+        try:
+            return int(value)
+        except ValueError:
+            return default
+
+    # Add the new process to the list
     new_process = {
-        "ProcessID": int(process_id),
-        "BurstTime": int(burst_time),
-        "Priority": int(priority),
-        "RemainingTime": int(remaining_time),
-        "CPU": cpu,
-        "Memory": memory,
-        "State": "Ready"
+        "ProcessID": to_int(process_id),
+        "BurstTime": to_int(burst_time),
+        "Priority": to_int(priority),
+        "RemainingTime": to_int(remaining_time),
+        "CPU": cpu if cpu else "N/A",  # Default to "N/A" if empty
+        "Memory": memory if memory else "N/A",  # Default to "N/A" if empty
+        "State": "Ready",
+        "ProgramCounter": to_int(program_counter),
+        "OpenFiles": to_int(open_files),
+        "AX": to_int(ax),
+        "BX": to_int(bx),
     }
+
     process_data.append(new_process)
     waiting_times[new_process["ProcessID"]] = 0
     turnaround_times[new_process["ProcessID"]] = 0
@@ -222,9 +232,9 @@ def add_process(popup, process_id, burst_time, priority, remaining_time, cpu, me
 def create_process_popup():
     popup = tk.Toplevel()
     popup.title("Create New Process")
-    popup.geometry("400x300")
+    popup.geometry("400x500")
     
-    labels = ["Process ID", "Burst Time", "Priority", "Remaining Time", "CPU", "Memory"]
+    labels = ["Process ID", "Burst Time", "Priority", "Remaining Time", "CPU", "Memory", "Program Counter", "Open Files", "AX", "BX"]
     entries = {}
     for i, label in enumerate(labels):
         tk.Label(popup, text=label).grid(row=i, column=0, padx=10, pady=5)
@@ -241,11 +251,15 @@ def create_process_popup():
             entries["Priority"].get(),
             entries["Remaining Time"].get(),
             entries["CPU"].get(),
-            entries["Memory"].get()
+            entries["Memory"].get(),
+            entries["Program Counter"].get(),
+            entries["Open Files"].get(),
+            entries["AX"].get(),
+            entries["BX"].get()
         )
     ).grid(row=len(labels), column=0, columnspan=2, pady=10)
 
-# Create the main window
+# GUI Components Initialization
 root = tk.Tk()
 root.title("OS Simulator with PCB")
 root.geometry("1200x800")
