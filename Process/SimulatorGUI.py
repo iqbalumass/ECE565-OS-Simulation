@@ -102,6 +102,7 @@ def update_waiting_and_turnaround_times():
 
 # Start OS Simulation
 def start_os():
+    reset_simulation()
     load_process_data()
     populate_tables()
 
@@ -181,6 +182,22 @@ def next_clock_cycle():
     # Update waiting and turnaround times
     update_waiting_and_turnaround_times()
     populate_tables()  # Refresh the GUI at the end of the cycle
+
+
+def reset_simulation():
+    global gantt_chart_data, current_running_index, process_data
+
+    # Reset the Gantt chart data
+    gantt_chart_data = []
+
+    # Reset process data (reinitialize with initial state if needed)
+    for process in process_data:
+        process["RemainingTime"] = process["BurstTime"]  # Assuming BurstTime is the original time
+        process["State"] = "New"  # Reset to initial state
+        process["ProgramCounter"] = process.get("InitialProgramCounter", 0)  # Optional: Reset ProgramCounter if applicable
+
+    # Reset the current running index
+    current_running_index = -1
 
 # Show Gantt Chart
 def show_gantt_chart():
