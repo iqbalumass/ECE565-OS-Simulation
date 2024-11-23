@@ -10,6 +10,9 @@ from block import BLOCK, BlockGUI
 
 reads=0
 writes=0
+file_name=None
+action_type=None
+pos=None
 
 class ContiguousAllocationBLOCK(BLOCK):
     def __init__(self, file):
@@ -29,6 +32,11 @@ class ContiguousAllocationBlockGUI(BlockGUI):
         self.read_write_label = tk.Label(self.root, text=f"Reads: {reads} | Writes: {writes}")
         self.read_write_label.pack(pady=5)
 
+         # File, action, position label
+        self.file_label = tk.Label(self.root, text=f"File: {file_name} | Action: {action_type} | Position : {pos}")
+        self.file_label.pack(pady=5)
+        
+
         self.blocks = [None] * 32  # Placeholder for BLOCK objects
         
         
@@ -43,13 +51,17 @@ class ContiguousAllocationBlockGUI(BlockGUI):
             label.grid(row=i // 8, column=i % 8, padx=5, pady=5)
             self.block_labels.append(label)
         
-        # Load button
-        self.load_button = tk.Button(self.root, text="Load block entries from JSON", command=self.load_entries)
-        self.load_button.pack(pady=5)
+        # # Load button
+        # self.load_button = tk.Button(self.root, text="Load block entries from JSON", command=self.load_entries)
+        # self.load_button.pack(pady=5)
+        
 
         # Update button (disabled initially)
         self.update_button = tk.Button(self.root, text="Update File", state=tk.DISABLED, command=self.update_file)
         self.update_button.pack(pady=5)
+
+        # Automatically load entries when initializing the GUI
+        self.load_entries()  
 
     def load_entries(self):
         try:
@@ -86,6 +98,8 @@ class ContiguousAllocationBlockGUI(BlockGUI):
             # Enable the Update button after loading
             self.update_button.config(state=tk.NORMAL)
             # messagebox.showinfo("Success", "Block entries loaded from JSON.")
+
+            
         
         except FileNotFoundError:
             messagebox.showerror("Error", "block_entries.json file not found.")
@@ -111,6 +125,10 @@ class ContiguousAllocationBlockGUI(BlockGUI):
         """Update the reads and writes label."""
         self.read_write_label.config(text=f"Reads: {reads} | Writes: {writes}")
     
+    def update_file_label(self):
+        self.file_label.config(text=f'File: {file_name} | Action: {action_type} | Position : {pos}')
+        
+        
     def update_file(self):
             # Create a new popup window
         update_window = Toplevel(self.root)
@@ -140,7 +158,8 @@ class ContiguousAllocationBlockGUI(BlockGUI):
         tk.Radiobutton(update_window, text="End", variable=position, value="end").grid(row=2, column=3, sticky="w")
 
         # Update button to confirm and call add/remove functions
-        def confirm_update():
+        def confirm_update(update_button):
+            global file_name,pos,action_type
             file_name = selected_file.get()
             pos = position.get()
             action_type = action.get()
@@ -164,6 +183,8 @@ class ContiguousAllocationBlockGUI(BlockGUI):
                 remove(file_name, start, length, position=pos)  # Parameters are placeholders
 
             update_window.destroy()  # Close the update window
+            # Disable the "Update File" button after the update
+            update_button.config(state=tk.DISABLED)  # Disable the update button
 
         
         def add(file_name, start, length, position):
@@ -213,6 +234,7 @@ class ContiguousAllocationBlockGUI(BlockGUI):
                         self.block_labels[target].config(bg="light blue")
                         writes=writes+1
                         print(f"Block added for file '{file_name}' at position {target}")
+                        messagebox.showinfo("Success", f"Block added for file '{file_name}' at position {target}")
                         
                 else:
                     # If the target position is empty, simply insert the block
@@ -221,6 +243,7 @@ class ContiguousAllocationBlockGUI(BlockGUI):
                     updated_indices.append(target)
                     writes=writes+1
                     print(f"Block added for file '{file_name}' at position {target}")
+                    messagebox.showinfo("Success", f"Block added for file '{file_name}' at position {target}")
                         
                 
             
@@ -268,6 +291,8 @@ class ContiguousAllocationBlockGUI(BlockGUI):
                         writes=writes+1
                         updated_indices.append(target)
                         print(f"Block added for file '{file_name}' at position {target}")
+                        messagebox.showinfo("Success", f"Block added for file '{file_name}' at position {target}")
+
                         
                 else:
                     # If the target position is empty, simply insert the block
@@ -276,6 +301,7 @@ class ContiguousAllocationBlockGUI(BlockGUI):
                     updated_indices.append(target)
                     writes=writes+1
                     print(f"Block added for file '{file_name}' at position {target}")
+                    messagebox.showinfo("Success", f"Block added for file '{file_name}' at position {target}")
                     
 
             
@@ -339,6 +365,7 @@ class ContiguousAllocationBlockGUI(BlockGUI):
                         updated_indices.append(target)
                         writes=writes+1
                         print(f'disk block {target} has {self.blocks[target].file}')
+                        messagebox.showinfo("Success", f"Block added for file '{file_name}' at position {target}")
 
 
 
@@ -380,6 +407,7 @@ class ContiguousAllocationBlockGUI(BlockGUI):
                         updated_indices.append(target)
                         writes=writes+1
                         print(f'disk block {target} has {self.blocks[target].file}')
+                        messagebox.showinfo("Success", f"Block added for file '{file_name}' at position {target}")
 
             
             
@@ -422,6 +450,7 @@ class ContiguousAllocationBlockGUI(BlockGUI):
                         updated_indices.append(target)
                         writes=writes+1
                         print(f'disk block {target} has {self.blocks[target].file}')
+                        messagebox.showinfo("Success", f"Block added for file '{file_name}' at position {target}")
 
             
 
@@ -459,13 +488,16 @@ class ContiguousAllocationBlockGUI(BlockGUI):
                         updated_indices.append(target)
                         writes=writes+1
                         print(f'disk block {target} has {self.blocks[target].file}')
+                        messagebox.showinfo("Success", f"Block added for file '{file_name}' at position {target}")
 
                     else:
                         print('no space')
+                        messagebox.showinfo()
 
             print(f"Read:{reads} and Writes:{writes}")
             self.update_block_label(updated_indices)
             self.update_read_write_label()  # Update the reads and writes display
+            self.update_file_label()
 
             #pass  # Implement logic here later
 
@@ -485,6 +517,7 @@ class ContiguousAllocationBlockGUI(BlockGUI):
                     writes=writes+1
         
                 self.blocks[start + length-1]=None
+                messagebox.showinfo("Success", f"Removing block for file '{file_name}' at position {start}")
                 self.block_labels[start+length-1].config(bg="white")
                 updated_indices.append(start+length-1)
 
@@ -493,6 +526,7 @@ class ContiguousAllocationBlockGUI(BlockGUI):
 
             if position=="end":
                 print(f'remove block at {start+length-1}')
+                messagebox.showinfo("Success", f"Removing block for file '{file_name}' at position {start+length-1}")
                 self.blocks[start + length-1]=None
                 highlight_index=start+length-1
                 self.block_labels[start+length-1].config(bg="white")
@@ -514,6 +548,7 @@ class ContiguousAllocationBlockGUI(BlockGUI):
                     reads=reads+1
                     writes=writes+1
             self.blocks[start + length-1]=None
+            messagebox.showinfo("Success", f"Removing block for file '{file_name}' at position {target}")
             self.block_labels[start+length-1].config(bg="white")
             updated_indices.append(start+length-1)
             print(f'block {start+length-1} is now {self.blocks[start + length-1]}')
@@ -521,8 +556,9 @@ class ContiguousAllocationBlockGUI(BlockGUI):
             print(f"Read:{reads} and Writes:{writes}")
             self.update_block_label(updated_indices)
             self.update_read_write_label()  # Update the reads and writes display
+            self.update_file_label()
         
-        update_button = tk.Button(update_window, text="Update File", command=confirm_update)
+        update_button = tk.Button(update_window, text="Update File", command=lambda: confirm_update(self.update_button))
         update_button.grid(row=3, column=0, columnspan=4, pady=10)  # Adjusted position
 
 

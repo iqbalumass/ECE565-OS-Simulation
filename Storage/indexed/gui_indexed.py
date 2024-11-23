@@ -11,6 +11,9 @@ from block import BLOCK, BlockGUI
 
 reads = 0
 writes = 0
+file_name=None
+action_type=None
+pos=None
 
 class IndexedAllocationBLOCK(BLOCK):
     def __init__(self, file=None, next_block=None, data_blocks=None, is_index_block=False):
@@ -26,12 +29,20 @@ class IndexedAllocationBlockGUI(BlockGUI):
         # self.root.geometry("800x600")
 
         # Labels and instructions
-        self.instruction_label = tk.Label(self.root, text="Disk Block Occupancy")
+        self.instruction_label = tk.Label(self.root, text="Disk Block Occupancy (Blue = Occupied, White = Free, Light Green=Index)")
         self.instruction_label.pack(pady=10)
+
+    
         
         # Reads and writes
         self.read_write_label = tk.Label(self.root, text="Reads: 0 | Writes: 0")
         self.read_write_label.pack(pady=5)
+
+        # File, action, position label
+        self.file_label = tk.Label(self.root, text=f"File: {file_name} | Action: {action_type} | Position : {pos}")
+        self.file_label.pack(pady=5)
+
+        
 
         # Blocks display
         self.blocks_frame = tk.Frame(self.root)
@@ -51,12 +62,15 @@ class IndexedAllocationBlockGUI(BlockGUI):
             label.bind("<Leave>", self.hide_tooltip)
 
         # Load Button
-        self.load_button = tk.Button(self.root, text="Load Block Entries", command=self.load_entries)
-        self.load_button.pack(pady=5)
+        # self.load_button = tk.Button(self.root, text="Load Block Entries", command=self.load_entries)
+        # self.load_button.pack(pady=5)
         
         # Update Button (temporarily disabled)
         self.update_button = tk.Button(self.root, text="Update Block", state=tk.DISABLED,command=self.update_file)
         self.update_button.pack(pady=5)
+
+        # Automatically load entries when initializing the GUI
+        self.load_entries()  
 
         # Tooltip label (initially hidden)
         self.tooltip = tk.Label(self.root, text="", background="light yellow", borderwidth=1, relief="solid", padx=5, pady=3)
@@ -141,7 +155,8 @@ class IndexedAllocationBlockGUI(BlockGUI):
         tk.Radiobutton(update_window, text="End", variable=position, value="end").grid(row=2, column=3, sticky="w")
 
         # Update button to confirm and call add/remove functions
-        def confirm_update():
+        def confirm_update(update_button):
+            global file_name,pos,action_type
             file_name = selected_file.get()
             pos = position.get()
             action_type = action.get()
@@ -166,8 +181,10 @@ class IndexedAllocationBlockGUI(BlockGUI):
                 remove(file_name, start, length, position=pos)  # Parameters are placeholders
 
             update_window.destroy()  # Close the update window
+             # Disable the "Update File" button after the update
+            update_button.config(state=tk.DISABLED)  # Disable the update button
         
-        update_button = tk.Button(update_window, text="Update File", command=confirm_update)
+        update_button = tk.Button(update_window, text="Update File", command=lambda: confirm_update(self.update_button))
         update_button.grid(row=3, column=0, columnspan=4, pady=10)  # Adjusted position
 
         def add(file_name, start, length, position):
@@ -176,7 +193,7 @@ class IndexedAllocationBlockGUI(BlockGUI):
             file_allocation = self.indexed_allocation[file_name]
             index_block = file_allocation["index_block"]
             data_blocks = file_allocation["data_blocks"]
-
+            
             # Determine where to add the new block
             if position == "beginning":
                 new_block = self.find_free_block()
@@ -188,12 +205,14 @@ class IndexedAllocationBlockGUI(BlockGUI):
             elif position == "end":
                 new_block = self.find_free_block()
                 data_blocks.append(new_block)
-    
+
             # Update the indexed allocation with the new data blocks
             self.indexed_allocation[file_name]["data_blocks"] = data_blocks
 
             # Mark the new block as used
             self.blocks[new_block] = IndexedAllocationBLOCK(file=file_name, next_block=None)
+            print(f'new block is {new_block}')
+            messagebox.showinfo("Success", f"Adding New Block at Block {new_block} .")
 
             # Update the GUI with the new block
             self.update_gui_blocks()
@@ -201,6 +220,7 @@ class IndexedAllocationBlockGUI(BlockGUI):
             # Increment the write counter
             writes += 1
             self.update_read_write_label()
+            self.update_file_label()
 
     
 
@@ -224,6 +244,7 @@ class IndexedAllocationBlockGUI(BlockGUI):
 
             # Mark the block as free
             self.blocks[block_to_remove] = None
+            messagebox.showinfo("Success", f"Removing Block at Block {block_to_remove} .")
 
             # Update the indexed allocation
             self.indexed_allocation[file_name]["data_blocks"] = data_blocks
@@ -233,6 +254,7 @@ class IndexedAllocationBlockGUI(BlockGUI):
             
             
             self.update_read_write_label()
+            self.update_file_label()
 
 
     def find_free_block(self):
@@ -265,6 +287,8 @@ class IndexedAllocationBlockGUI(BlockGUI):
 
     def update_read_write_label(self):
         self.read_write_label.config(text=f"Reads: {reads} | Writes: {writes}")
+    def update_file_label(self):
+        self.file_label.config(text=f'File: {file_name} | Action: {action_type} | Position : {pos}')
 
     def show_tooltip(self, event, index):
         block = self.blocks[index]

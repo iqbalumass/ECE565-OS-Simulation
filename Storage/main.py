@@ -19,6 +19,16 @@ class MainApp:
         self.root.geometry("1000x1000")
 
         self.blocks = [None] * 32  # Placeholder for BLOCK objects
+
+        # Add a descriptive label at the top
+        self.description_label = tk.Label(
+            self.root,
+            text="Here we will be showing performances of three Allocation Methods: Contiguous Allocation, Linked List Allocation and Indexed Allocation in terms of number of Disk Operations (Read/Write) needed to Add/Remove a Block to/from an existing file.\n Assume, there are 32 blocks in our disk.",
+            font=("TkDefaultFont", 10),
+            wraplength=800,  # Wrap text if it's too wide
+            justify="center"  # Center the text
+        )
+        self.description_label.pack(pady=10)
         
         
         # Display the 32 blocks as labels
@@ -33,12 +43,14 @@ class MainApp:
             self.block_labels.append(label)
         
         # Load button
-        self.load_button = tk.Button(self.root, text="Get started by loading blocks", command=self.load_entries)
+        self.load_button = tk.Button(self.root, text="Get started", command=self.load_entries)
         self.load_button.pack(pady=5)
 
         # Update button (disabled initially)
         self.update_button = tk.Button(self.root, text="Simulate Adding/Removing Block", state=tk.DISABLED, command=self.update_file)
         self.update_button.pack(pady=5)
+
+        
 
     def load_entries(self):
             print('load')
@@ -135,8 +147,8 @@ class MainApp:
         def remove(file_name, start, length, position):
             pass
 
-
     
+
 # Run the main loop
 def main():
     root = tk.Tk()

@@ -11,6 +11,9 @@ from block import BLOCK, BlockGUI
 
 reads=0
 writes=0
+file_name=None
+action_type=None
+pos=None
 
 class LinkedAllocationBLOCK(BLOCK):
     def __init__(self, file, next_block):
@@ -31,6 +34,10 @@ class LinkedAllocationBlockGUI(BlockGUI):
         self.read_write_label = tk.Label(self.root, text=f"Reads: {reads} | Writes: {writes}")
         self.read_write_label.pack(pady=5)
 
+        # File, action, position label
+        self.file_label = tk.Label(self.root, text=f"File: {file_name} | Action: {action_type} | Position : {pos}")
+        self.file_label.pack(pady=5)
+
         self.blocks = [None] * 32  # Placeholder for BLOCK objects
         
         
@@ -46,12 +53,14 @@ class LinkedAllocationBlockGUI(BlockGUI):
             self.block_labels.append(label)
         
         # Load button
-        self.load_button = tk.Button(self.root, text="Load block entries from JSON", command=self.load_entries)
-        self.load_button.pack(pady=5)
+        # self.load_button = tk.Button(self.root, text="Load block entries from JSON", command=self.load_entries)
+        # self.load_button.pack(pady=5)
 
         # Update button (disabled initially)
         self.update_button = tk.Button(self.root, text="Update File", state=tk.DISABLED, command=self.update_file)
         self.update_button.pack(pady=5)
+        # Automatically load entries when initializing the GUI
+        self.load_entries()  
 
     def load_entries(self):
         try:
@@ -100,10 +109,13 @@ class LinkedAllocationBlockGUI(BlockGUI):
     def update_read_write_label(self):
         """Update the reads and writes label."""
         self.read_write_label.config(text=f"Reads: {reads} | Writes: {writes}")
+
+    def update_file_label(self):
+        self.file_label.config(text=f'File: {file_name} | Action: {action_type} | Position : {pos}')
     
     def update_file(self):
             # Create a new popup window
-        update_window = Toplevel(root)
+        update_window = Toplevel(self.root)
         update_window.title("Update File")
         update_window.geometry("500x250")  # Adjust window size
 
@@ -130,7 +142,8 @@ class LinkedAllocationBlockGUI(BlockGUI):
         tk.Radiobutton(update_window, text="End", variable=position, value="end").grid(row=2, column=3, sticky="w")
 
         # Update button to confirm and call add/remove functions
-        def confirm_update():
+        def confirm_update(update_button):
+            global file_name,action_type,pos
             file_name = selected_file.get()
             pos = position.get()
             action_type = action.get()
@@ -150,16 +163,18 @@ class LinkedAllocationBlockGUI(BlockGUI):
             # Call add or remove function based on action_type
             if action_type == "Add":
                 global reads, writes
-                self.add(file_name, start, length, position=pos)  # Parameters are placeholders
+                add(file_name, start, length, position=pos)  # Parameters are placeholders
             else:
-                self.remove(file_name, start, length, position=pos)  # Parameters are placeholders
+                remove(file_name, start, length, position=pos)  # Parameters are placeholders
 
             update_window.destroy()  # Close the update window
+             # Disable the "Update File" button after the update
+            update_button.config(state=tk.DISABLED)  # Disable the update button
 
-        update_button = tk.Button(update_window, text="Update File", command=confirm_update)
+        update_button = tk.Button(update_window, text="Update File", command=lambda: confirm_update(self.update_button))
         update_button.grid(row=3, column=0, columnspan=4, pady=10)  # Adjusted position
         
-        def add(self,file_name, start, length, position):
+        def add(file_name, start, length, position):
             global reads, writes
             current_block_index = start
 
@@ -177,6 +192,7 @@ class LinkedAllocationBlockGUI(BlockGUI):
 
                 print(f'Reads: {reads}, Writes {writes}')
                 ###Changes to GUI
+                messagebox.showinfo("Success", f"Adding New Block at Block {new_block_index} .")
                 self.update_block_label(new_block_index)
                 self.block_labels[new_block_index].config(bg="light blue")
 
@@ -209,6 +225,7 @@ class LinkedAllocationBlockGUI(BlockGUI):
                 print(self.blocks[current_block_index].next_block)
 
                 ###Changes to GUI
+                messagebox.showinfo("Success", f"Adding New Block at Block {new_block_index} .")
                 self.update_block_label(new_block_index)
                 self.update_block_label(current_block_index)
                 self.block_labels[new_block_index].config(bg="light blue")
@@ -256,12 +273,14 @@ class LinkedAllocationBlockGUI(BlockGUI):
                 print(self.blocks[current_block_index].next_block)
 
                 ###Changes to GUI
+                messagebox.showinfo("Success", f"Adding New Block at Block {new_block_index} .")
                 self.update_block_label(new_block_index)
                 self.update_block_label(current_block_index)
                 self.update_block_label(previous_block_index)
                 self.block_labels[new_block_index].config(bg="light blue")
 
             self.update_read_write_label()
+            self.update_file_label()
 
         def remove(file_name, start, length, position):
             global reads,writes
@@ -287,6 +306,7 @@ class LinkedAllocationBlockGUI(BlockGUI):
 
                 print(f'Reads: {reads}, Writes {writes}')
                 ###Changes to GUI
+                messagebox.showinfo("Success", f"Removing Block at Block {block_to_remove} .")
                 self.update_block_label(block_to_remove)
                 self.update_block_label(start)
                 self.block_labels[block_to_remove].config(bg="white")
@@ -320,6 +340,7 @@ class LinkedAllocationBlockGUI(BlockGUI):
 
                 print(f'Reads: {reads}, Writes {writes}')
                 ###Changes to GUI
+                messagebox.showinfo("Success", f"Removing Block at Block {current_block_index} .")
                 self.update_block_label(previous_block_index)
                 self.update_block_label(current_block_index)
                 self.block_labels[current_block_index].config(bg="white")
@@ -372,12 +393,13 @@ class LinkedAllocationBlockGUI(BlockGUI):
                 
 
                 ###Changes to GUI
-                
+                messagebox.showinfo("Success", f"Removing Block at Block {current_block_index} .")
                 self.update_block_label(current_block_index)
                 self.update_block_label(previous_block_index)
                 self.block_labels[current_block_index].config(bg="white")
 
             self.update_read_write_label()
+            self.update_file_label()
 if __name__ == "__main__":
     root = tk.Tk()
     app = LinkedAllocationBlockGUI(root)
