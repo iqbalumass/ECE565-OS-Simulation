@@ -1,0 +1,35 @@
+[
+    {
+        "ProcessID": 1,
+        "BurstTime": 6,
+        "Priority": 2,
+        "State": "Running",
+        "RemainingTime": 4, 
+        "ProgramCounter": 2, 
+        "OpenFiles": 2,  
+        "AX": 7,  
+        "BX": 5
+    },
+    {
+        "ProcessID": 2,
+        "BurstTime": 8,
+        "Priority": 1,
+        "State": "Ready",
+        "RemainingTime": 6,
+        "ProgramCounter": 4, 
+        "OpenFiles": 5,  
+        "AX": 9,  
+        "BX": 4
+    },
+    {
+        "ProcessID": 3,
+        "BurstTime": 10,
+        "Priority": 3,
+        "State": "Waiting",
+        "RemainingTime": 7,
+        "ProgramCounter": 5, 
+        "OpenFiles": 2,  
+        "AX": 2,  
+        "BX": 1
+    }
+]
