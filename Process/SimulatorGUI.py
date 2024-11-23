@@ -34,21 +34,25 @@ def update_pcb(process):
 
 # Populate each table based on the process state
 def populate_tables():
+    # Clear all existing table entries
     for table in [running_processes_table, ready_queue_table, waiting_processes_table, program_list_table]:
         table.delete(*table.get_children())
     
+    # Populate the tables with updated process states
     for process in process_data:
         values = (process["ProcessID"], process.get("State", ""), process["Priority"], process["BurstTime"], process["RemainingTime"])
         if process["State"] == "Running":
             running_processes_table.insert("", "end", values=values)
         elif process["State"] == "Ready":
             ready_queue_table.insert("", "end", values=values)
-        elif process["State"] == "Waiting":
+        elif process["State"] == "Blocked":  # Update for Blocked processes
             waiting_processes_table.insert("", "end", values=values)
 
+        # Add all processes to the Program List table with waiting and turnaround times
         program_values = (process["ProcessID"], waiting_times[process["ProcessID"]], turnaround_times[process["ProcessID"]])
         program_list_table.insert("", "end", values=program_values)
 
+    # Update average waiting and turnaround times
     update_avg_times()
 
 # Update Average Waiting and Turnaround Times
@@ -125,6 +129,14 @@ def next_clock_cycle():
     found_next_process = False
     for i in range(current_running_index + 1, len(process_data)):
         if process_data[i]["RemainingTime"] > 0:
+            # Check if the process has a valid ProgramCounter
+            if process_data[i].get("ProgramCounter", 0) <= 0:
+                # Move the process to Blocked state if ProgramCounter is invalid
+                process_data[i]["State"] = "Blocked"
+                print(f"Process {process_data[i]['ProcessID']} moved to Blocked state due to invalid ProgramCounter.")
+                populate_tables()  # Refresh the GUI to show the change
+                continue
+
             current_running_index = i
             process_data[i]["State"] = "Running"
             update_pcb(process_data[i])  # Update PCB for the running process
@@ -135,6 +147,14 @@ def next_clock_cycle():
     if not found_next_process:
         for i in range(len(process_data)):
             if process_data[i]["RemainingTime"] > 0:
+                # Check if the process has a valid ProgramCounter
+                if process_data[i].get("ProgramCounter", 0) <= 0:
+                    # Move the process to Blocked state if ProgramCounter is invalid
+                    process_data[i]["State"] = "Blocked"
+                    print(f"Process {process_data[i]['ProcessID']} moved to Blocked state due to invalid ProgramCounter.")
+                    populate_tables()  # Refresh the GUI to show the change
+                    continue
+
                 current_running_index = i
                 process_data[i]["State"] = "Running"
                 update_pcb(process_data[i])  # Update PCB for the running process
@@ -160,7 +180,7 @@ def next_clock_cycle():
 
     # Update waiting and turnaround times
     update_waiting_and_turnaround_times()
-    populate_tables()
+    populate_tables()  # Refresh the GUI at the end of the cycle
 
 # Show Gantt Chart
 def show_gantt_chart():
