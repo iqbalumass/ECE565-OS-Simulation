@@ -1,0 +1,22 @@
+{
+    "count": {
+        "start_block": 0,
+        "length": 2
+    },
+    "tr": {
+        "start_block": 14,
+        "length": 3
+    },
+    "mail": {
+        "start_block": 19,
+        "length": 6
+    },
+    "list": {
+        "start_block": 28,
+        "length": 4
+    },
+    "f": {
+        "start_block": 6,
+        "length": 2
+    }
+}
