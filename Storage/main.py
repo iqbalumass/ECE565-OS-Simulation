@@ -23,14 +23,13 @@ class MainApp:
         # Add a descriptive label at the top
         self.description_label = tk.Label(
             self.root,
-            text="Here we will be showing performances of three Allocation Methods: Contiguous Allocation, Linked List Allocation and Indexed Allocation in terms of number of Disk Operations (Read/Write) needed to Add/Remove a Block to/from an existing file.\n Assume, there are 32 blocks in our disk.",
+            text="Here we will be showing performances of three Allocation Methods: Contiguous Allocation, Linked List Allocation, and Indexed Allocation in terms of number of Disk Operations (Read/Write) needed to Add/Remove a Block to/from an existing file.\n Assume, there are 32 blocks in our disk.",
             font=("TkDefaultFont", 10),
             wraplength=800,  # Wrap text if it's too wide
             justify="center"  # Center the text
         )
         self.description_label.pack(pady=10)
-        
-        
+
         # Display the 32 blocks as labels
         self.blocks_frame = tk.Frame(self.root)
         self.blocks_frame.pack(pady=20)
@@ -41,7 +40,7 @@ class MainApp:
             label = tk.Label(self.blocks_frame, text=f"Block {i}\nFile: None", borderwidth=1, relief="solid", width=10, height=4)
             label.grid(row=i // 8, column=i % 8, padx=5, pady=5)
             self.block_labels.append(label)
-        
+
         # Load button
         self.load_button = tk.Button(self.root, text="Get started", command=self.load_entries)
         self.load_button.pack(pady=5)
@@ -50,40 +49,45 @@ class MainApp:
         self.update_button = tk.Button(self.root, text="Simulate Adding/Removing Block", state=tk.DISABLED, command=self.update_file)
         self.update_button.pack(pady=5)
 
-        
+        # Create the Notebook during initialization
+        self.notebook = ttk.Notebook(self.root)
+        self.notebook.pack(fill='both', expand=True, pady=10)
+        self.notebook.pack_forget()  # Hide the Notebook initially
+
+        # Prepare frames for the tabs (to be populated later)
+        self.f1 = ttk.Frame(self.notebook)
+        self.f2 = ttk.Frame(self.notebook)
+        self.f3 = ttk.Frame(self.notebook)
 
     def load_entries(self):
-            print('load')
+        print('load')
 
-    
-            with open("linked/directory.json", "r") as f:
-                self.directory_data = json.load(f)
+        with open("linked/directory.json", "r") as f:
+            self.directory_data = json.load(f)
 
-            # Disable the Load button
-            self.load_button.config(state=tk.DISABLED)
+        # Disable the Load button
+        self.load_button.config(state=tk.DISABLED)
 
-            # Hide the blocks by removing the frame
-            self.blocks_frame.pack_forget()
-            self.notebook = ttk.Notebook(self.root)
-            f1 = ttk.Frame(self.notebook)   # first page, which would get widgets gridded into it
-            f2 = ttk.Frame(self.notebook)   # second page
-            f3= ttk.Frame(self.notebook)
+        # Hide the blocks frame
+        self.blocks_frame.pack_forget()
 
-            
-            self.contiguous_gui = ContiguousAllocationBlockGUI(f1)
-            self.linked_gui = LinkedAllocationBlockGUI(f2)
-            self.indexed_gui = IndexedAllocationBlockGUI(f3)
-            self.notebook.add(f1, text='Contiguous Allocation')
-            self.notebook.add(f2, text='Linked Allocation')
-            self.notebook.add(f3, text='Indexed Allocation')
+        # Add and initialize tabs
+        self.contiguous_gui = ContiguousAllocationBlockGUI(self.f1)
+        self.linked_gui = LinkedAllocationBlockGUI(self.f2)
+        self.indexed_gui = IndexedAllocationBlockGUI(self.f3)
+        self.notebook.add(self.f1, text='Contiguous Allocation')
+        self.notebook.add(self.f2, text='Linked Allocation')
+        self.notebook.add(self.f3, text='Indexed Allocation')
 
-            # Pack the Notebook so it appears in the layout
-            self.notebook.pack(fill='both', expand=True, pady=10)
-            # Enable the Update button after loading
-            self.update_button.config(state=tk.NORMAL)
+        # Show the Notebook
+        self.notebook.pack(fill='both', expand=True, pady=10)
+
+        # Enable the Update button after loading
+        self.update_button.config(state=tk.NORMAL)
+
     def update_file(self):
         print('update file')
-            # Create a new popup window
+        # Create a new popup window
         update_window = Toplevel(self.root)
         update_window.title("Update File")
         update_window.geometry("500x250")  # Adjust window size
@@ -130,10 +134,15 @@ class MainApp:
 
             # Call add or remove function based on action_type
             if action_type == "Add":
-                global reads, writes
-                add(self, file_name, start, length, position=pos)  # Parameters are placeholders
+                #add(file_name, start, length, pos)
+                self.contiguous_gui.add(file_name,start,length,pos)
+                self.linked_gui.add(file_name,start,length,pos)
+                self.indexed_gui.add(file_name,start,length,pos)
             else:
-                remove(self, file_name, start, length, position=pos)  # Parameters are placeholders
+                #remove(file_name, start, length, pos)
+                self.contiguous_gui.remove(file_name,start,length,pos)
+                self.linked_gui.remove(file_name,start,length,pos)
+                self.indexed_gui.remove(file_name,start,length,pos)
 
             update_window.destroy()  # Close the update window
 
@@ -141,13 +150,11 @@ class MainApp:
         update_button.grid(row=3, column=0, columnspan=4, pady=10)  # Adjusted position
 
         def add(file_name, start, length, position):
-            ##self.linked_gui.add(self,file_name, start, length, position)
             pass
             
         def remove(file_name, start, length, position):
             pass
 
-    
 
 # Run the main loop
 def main():
@@ -156,4 +163,4 @@ def main():
     root.mainloop()
 
 if __name__ == "__main__":
-    main()
+    main() 
