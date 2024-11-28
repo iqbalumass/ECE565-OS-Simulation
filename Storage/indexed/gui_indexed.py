@@ -212,7 +212,7 @@ class IndexedAllocationBlockGUI(BlockGUI):
             # Mark the new block as used
             self.blocks[new_block] = IndexedAllocationBLOCK(file=file_name, next_block=None)
             print(f'new block is {new_block}')
-            messagebox.showinfo("Success", f"Adding New Block at Block {new_block} .")
+            messagebox.showinfo("Indexed Allocation GUI", f"Adding New Block at Block {new_block} .")
 
             # Update the GUI with the new block
             self.update_gui_blocks()
@@ -244,7 +244,7 @@ class IndexedAllocationBlockGUI(BlockGUI):
 
             # Mark the block as free
             self.blocks[block_to_remove] = None
-            messagebox.showinfo("Success", f"Removing Block at Block {block_to_remove} .")
+            messagebox.showinfo("Indexed Allocation GUI", f"Removing Block at Block {block_to_remove} .")
 
             # Update the indexed allocation
             self.indexed_allocation[file_name]["data_blocks"] = data_blocks
@@ -256,6 +256,76 @@ class IndexedAllocationBlockGUI(BlockGUI):
             self.update_read_write_label()
             self.update_file_label()
 
+    '''
+    These add() and remove() are for the integrated module. Please do not consider duplicate.
+    '''
+
+    def add(self,file_name, start, length, position):
+            global writes
+            # Fetch the current indexed allocation for the file
+            file_allocation = self.indexed_allocation[file_name]
+            index_block = file_allocation["index_block"]
+            data_blocks = file_allocation["data_blocks"]
+            
+            # Determine where to add the new block
+            if position == "beginning":
+                new_block = self.find_free_block()
+                data_blocks.insert(0, new_block)
+            elif position == "middle":
+                new_block = self.find_free_block()
+                mid_index = len(data_blocks) // 2
+                data_blocks.insert(mid_index, new_block)
+            elif position == "end":
+                new_block = self.find_free_block()
+                data_blocks.append(new_block)
+
+            # Update the indexed allocation with the new data blocks
+            self.indexed_allocation[file_name]["data_blocks"] = data_blocks
+
+            # Mark the new block as used
+            self.blocks[new_block] = IndexedAllocationBLOCK(file=file_name, next_block=None)
+            print(f'new block is {new_block}')
+            messagebox.showinfo("Indexed Allocation GUI", f"Adding New Block at Block {new_block} .")
+
+            # Update the GUI with the new block
+            self.update_gui_blocks()
+
+            # Increment the write counter
+            writes += 1
+            self.update_read_write_label()
+            self.update_file_label()    
+
+    def remove(self,file_name, start, length, position):
+            
+            global writes
+
+            # Fetch the current indexed allocation for the file
+            file_allocation = self.indexed_allocation[file_name]
+            index_block = file_allocation["index_block"]
+            data_blocks = file_allocation["data_blocks"]
+
+            # Determine which block to remove
+            if position == "beginning":
+                block_to_remove = data_blocks.pop(0)
+            elif position == "middle":
+                mid_index = len(data_blocks) // 2
+                block_to_remove = data_blocks.pop(mid_index)
+            elif position == "end":
+                block_to_remove = data_blocks.pop()
+
+            # Mark the block as free
+            self.blocks[block_to_remove] = None
+            messagebox.showinfo("Indexed Allocation GUI", f"Removing Block at Block {block_to_remove} .")
+
+            # Update the indexed allocation
+            self.indexed_allocation[file_name]["data_blocks"] = data_blocks
+
+            # Update the GUI
+            self.update_gui_blocks()
+            
+            
+            self.update_read_write_label()
+            self.update_file_label()
 
     def find_free_block(self):
         for i in range(32):  # Assuming there are 32 blocks

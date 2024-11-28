@@ -95,7 +95,7 @@ class LinkedAllocationBlockGUI(BlockGUI):
 
             # Enable the Update button after loading
             self.update_button.config(state=tk.NORMAL)
-            # messagebox.showinfo("Success", "Block entries loaded from JSON.")
+            # messagebox.showinfo("Linked Allocation GUI", "Block entries loaded from JSON.")
         
         except FileNotFoundError:
             messagebox.showerror("Error", "block_entries.json file not found.")
@@ -192,7 +192,7 @@ class LinkedAllocationBlockGUI(BlockGUI):
 
                 print(f'Reads: {reads}, Writes {writes}')
                 ###Changes to GUI
-                messagebox.showinfo("Success", f"Adding New Block at Block {new_block_index} .")
+                messagebox.showinfo("Linked Allocation GUI", f"Adding New Block at Block {new_block_index} .")
                 self.update_block_label(new_block_index)
                 self.block_labels[new_block_index].config(bg="light blue")
 
@@ -225,7 +225,7 @@ class LinkedAllocationBlockGUI(BlockGUI):
                 print(self.blocks[current_block_index].next_block)
 
                 ###Changes to GUI
-                messagebox.showinfo("Success", f"Adding New Block at Block {new_block_index} .")
+                messagebox.showinfo("Linked Allocation GUI", f"Adding New Block at Block {new_block_index} .")
                 self.update_block_label(new_block_index)
                 self.update_block_label(current_block_index)
                 self.block_labels[new_block_index].config(bg="light blue")
@@ -273,7 +273,7 @@ class LinkedAllocationBlockGUI(BlockGUI):
                 print(self.blocks[current_block_index].next_block)
 
                 ###Changes to GUI
-                messagebox.showinfo("Success", f"Adding New Block at Block {new_block_index} .")
+                messagebox.showinfo("Linked Allocation GUI", f"Adding New Block at Block {new_block_index} .")
                 self.update_block_label(new_block_index)
                 self.update_block_label(current_block_index)
                 self.update_block_label(previous_block_index)
@@ -306,7 +306,7 @@ class LinkedAllocationBlockGUI(BlockGUI):
 
                 print(f'Reads: {reads}, Writes {writes}')
                 ###Changes to GUI
-                messagebox.showinfo("Success", f"Removing Block at Block {block_to_remove} .")
+                messagebox.showinfo("Linked Allocation GUI", f"Removing Block at Block {block_to_remove} .")
                 self.update_block_label(block_to_remove)
                 self.update_block_label(start)
                 self.block_labels[block_to_remove].config(bg="white")
@@ -340,7 +340,7 @@ class LinkedAllocationBlockGUI(BlockGUI):
 
                 print(f'Reads: {reads}, Writes {writes}')
                 ###Changes to GUI
-                messagebox.showinfo("Success", f"Removing Block at Block {current_block_index} .")
+                messagebox.showinfo("Linked Allocation GUI", f"Removing Block at Block {current_block_index} .")
                 self.update_block_label(previous_block_index)
                 self.update_block_label(current_block_index)
                 self.block_labels[current_block_index].config(bg="white")
@@ -393,13 +393,245 @@ class LinkedAllocationBlockGUI(BlockGUI):
                 
 
                 ###Changes to GUI
-                messagebox.showinfo("Success", f"Removing Block at Block {current_block_index} .")
+                messagebox.showinfo("Linked Allocation GUI", f"Removing Block at Block {current_block_index} .")
                 self.update_block_label(current_block_index)
                 self.update_block_label(previous_block_index)
                 self.block_labels[current_block_index].config(bg="white")
 
             self.update_read_write_label()
             self.update_file_label()
+
+    '''
+        This add() and remove() is for integration. Please do not consider it duplicate
+    '''
+    def add(self,file_name, start, length, position):
+        global reads, writes
+        current_block_index = start
+        
+
+        if position=="beginning":
+            # Pick a free block from null_file_indexes
+            new_block_index = self.null_file_indexes.pop()
+            print(f'new_block_index is {new_block_index}')
+
+            #Add the file and pointer to the new block    
+            self.blocks[new_block_index].file = file_name
+            self.blocks[new_block_index].next_block = start 
+
+            start = new_block_index
+            writes=writes+1
+
+            print(f'Reads: {reads}, Writes {writes}')
+            ###Changes to GUI
+            messagebox.showinfo("Linked Allocation GUI", f"Adding New Block at Block {new_block_index} .")
+            self.update_block_label(new_block_index)
+            self.block_labels[new_block_index].config(bg="light blue")
+
+
+        if position=="end":
+            while self.blocks[current_block_index].next_block is not None:
+                reads=reads+1
+                print(current_block_index)
+                current_block_index = self.blocks[current_block_index].next_block
+
+            reads=reads+1
+            print(f'current_block_index is {current_block_index}')
+            print(f'reads is {reads}')
+
+
+            # Pick the next free block from null_file_indexes
+            new_block_index = self.null_file_indexes.pop()
+            print(f'Adding block to Block{new_block_index}')
+
+            # Assign file data to the new block
+            self.blocks[new_block_index].file = file_name
+            self.blocks[new_block_index].next_block = None  # Since it's the end of the list
+            writes=writes+1
+            # Update the previous block to point to the new block
+            self.blocks[current_block_index].next_block = new_block_index
+            writes=writes+1
+
+            print(f'Reads: {reads}, Writes {writes}')
+            print(self.blocks[new_block_index].next_block)
+            print(self.blocks[current_block_index].next_block)
+
+            ###Changes to GUI
+            messagebox.showinfo("Linked Allocation GUI", f"Adding New Block at Block {new_block_index} .")
+            self.update_block_label(new_block_index)
+            self.update_block_label(current_block_index)
+            self.block_labels[new_block_index].config(bg="light blue")
+            
+
+        if position=="middle":
+            
+            target=length//2
+
+            #might not occur but still keeping this around
+            if target==0:
+                self.add(file_name, start,length, position)
+                return
+
+            # Traverse the list to the block just before the desired position
+            current_block_index = start
+            previous_block_index = None
+            count = 0
+
+            while current_block_index is not None and count < target:
+                print(f'current block is Block {current_block_index} points to block {self.blocks[current_block_index].next_block} ')
+                previous_block_index = current_block_index
+                current_block_index = self.blocks[current_block_index].next_block
+                count += 1
+                reads=reads+1
+
+            if current_block_index is None and count < target:
+            # Position is out of bounds (larger than the list length)
+                print("Position out of bounds.")
+
+            # Pick a free block from null_file_indexes
+            new_block_index = self.null_file_indexes.pop()
+            print(f'new_block_index is {new_block_index}')
+
+            # Assign file data to the new block
+            self.blocks[new_block_index].file = file_name
+            self.blocks[new_block_index].next_block = current_block_index  # The new block points to the current block at position
+            
+            writes=writes+1
+            if previous_block_index is not None:
+                self.blocks[previous_block_index].next_block = new_block_index  # The previous block points to the new block
+                writes=writes+1
+            print(f'Reads: {reads}, Writes {writes}')
+            print(self.blocks[new_block_index].next_block)
+            print(self.blocks[current_block_index].next_block)
+
+            ###Changes to GUI
+            messagebox.showinfo("Linked Allocation GUI", f"Adding New Block at Block {new_block_index} .")
+            self.update_block_label(new_block_index)
+            self.update_block_label(current_block_index)
+            self.update_block_label(previous_block_index)
+            self.block_labels[new_block_index].config(bg="light blue")
+
+        self.update_read_write_label()
+        self.update_file_label()
+
+    def remove(self,file_name, start, length, position):
+        global reads,writes
+        current_block_index = start
+        previous_block_index=None
+
+        if position=="beginning":
+            if start is None:
+                # The list is empty, so nothing to remove
+                return None
+            
+            block_to_remove = start
+
+            # Update the start pointer to the next block
+            start = self.blocks[block_to_remove].next_block
+
+            # Free the block file and next_block attributes
+            self.blocks[block_to_remove].file = None
+            self.blocks[block_to_remove].next_block = None
+
+            # Return the removed block to the free list
+            self.null_file_indexes.add(block_to_remove)
+
+            print(f'Reads: {reads}, Writes {writes}')
+            ###Changes to GUI
+            messagebox.showinfo("Linked Allocation GUI", f"Removing Block at Block {block_to_remove} .")
+            self.update_block_label(block_to_remove)
+            self.update_block_label(start)
+            self.block_labels[block_to_remove].config(bg="white")
+
+
+        if position=="end":
+
+            while self.blocks[current_block_index].next_block is not None:
+                reads=reads+1
+                print(current_block_index)
+                previous_block_index=current_block_index
+                current_block_index = self.blocks[current_block_index].next_block
+
+            # Now, current_block_index is the last block
+            # previous_block_index is the second-to-last block
+
+            if previous_block_index is not None:
+                # Update the second-to-last block's next_block to None
+                self.blocks[previous_block_index].next_block = None
+                writes=writes+1
+
+            
+            ## Free the last block
+            self.blocks[current_block_index].file = None  # Clear the file data (optional)
+            self.blocks[current_block_index].next_block = None
+
+            # Return the last block to the free list
+            self.null_file_indexes.add(current_block_index)
+            print(f'current_block_index is {current_block_index}')
+            print(f'reads is {reads}')
+
+            print(f'Reads: {reads}, Writes {writes}')
+            ###Changes to GUI
+            messagebox.showinfo("Linked Allocation GUI", f"Removing Block at Block {current_block_index} .")
+            self.update_block_label(previous_block_index)
+            self.update_block_label(current_block_index)
+            self.block_labels[current_block_index].config(bg="white")
+
+
+        if position=="middle":
+            target=length//2
+
+            #might not occur but still keeping this around
+            if target==0:
+                self.add(file_name, start,length, position)
+                return
+
+            # Traverse the list to the block just before the desired position
+            current_block_index = start
+            previous_block_index = None
+            count = 0
+
+            while current_block_index is not None and count < target:
+                print(f'current block is Block {current_block_index} points to block {self.blocks[current_block_index].next_block} ')
+                previous_block_index = current_block_index
+                current_block_index = self.blocks[current_block_index].next_block
+                count += 1
+                reads=reads+1
+
+            if current_block_index is None and count < target:
+            # Position is out of bounds (larger than the list length)
+                print("Position out of bounds.")
+
+
+            # Now current_block_index is the block to remove
+            # previous_block_index is the block before it       
+            
+            # Update the previous block's next_block to skip the current block
+            if previous_block_index is not None:
+                self.blocks[previous_block_index].next_block = self.blocks[current_block_index].next_block
+
+            writes=writes+1
+
+            #Free the current block
+            self.blocks[current_block_index].file=None
+            self.blocks[current_block_index].next_block=None
+            self.null_file_indexes.add(current_block_index)
+            
+            
+
+    
+
+            print(f'Reads: {reads}, Writes {writes}')
+            
+
+            ###Changes to GUI
+            messagebox.showinfo("Linked Allocation GUI", f"Removing Block at Block {current_block_index} .")
+            self.update_block_label(current_block_index)
+            self.update_block_label(previous_block_index)
+            self.block_labels[current_block_index].config(bg="white")
+
+        self.update_read_write_label()
+        self.update_file_label()
+
 if __name__ == "__main__":
     root = tk.Tk()
     app = LinkedAllocationBlockGUI(root)
