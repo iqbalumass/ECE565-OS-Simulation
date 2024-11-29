@@ -5,7 +5,7 @@ import random
 class AddressTranslationGUI:
     def __init__(self, root):
         self.root = root
-        self.root.title("Virtual to Physical Address Translation")
+        self.root.title("Virtual to Physical Address Translation (8-bit)")
         self.address_pool = []  # Store generated addresses
         self.fifo_queue = []    # FIFO queue for frames
         self.max_frames = 4     # Maximum frames in FIFO
@@ -17,16 +17,16 @@ class AddressTranslationGUI:
 
         # Virtual Address Table
         tk.Label(root, text="Virtual Address Table", font=("Arial", 14)).grid(row=0, column=1, sticky="w")
-        self.virtual_table = ttk.Treeview(root, columns=("Frame", "Offset"), show="headings", height=10)
-        self.virtual_table.heading("Frame", text="Frame Number")
+        self.virtual_table = ttk.Treeview(root, columns=("Page Number", "Offset"), show="headings", height=10)
+        self.virtual_table.heading("Page Number", text="Page Number")
         self.virtual_table.heading("Offset", text="Offset")
         self.virtual_table.grid(row=1, column=1, padx=5, pady=5)
 
         # Page Table
         tk.Label(root, text="Page Table", font=("Arial", 14)).grid(row=0, column=2, sticky="w")
-        self.page_table = ttk.Treeview(root, columns=("Frame", "Valid"), show="headings", height=10)
+        self.page_table = ttk.Treeview(root, columns=("Frame", "Status"), show="headings", height=10)
         self.page_table.heading("Frame", text="Frame Number")
-        self.page_table.heading("Valid", text="Valid Bit")
+        self.page_table.heading("Status", text="Status")
         self.page_table.grid(row=1, column=2, padx=5, pady=5)
 
         # FIFO Queue
@@ -36,71 +36,101 @@ class AddressTranslationGUI:
 
         # Physical Address Space
         tk.Label(root, text="Physical Address Space", font=("Arial", 14)).grid(row=0, column=4, sticky="w")
-        self.physical_table = ttk.Treeview(root, columns=("Address"), show="headings", height=10)
-        self.physical_table.heading("Address", text="Memory Address")
+        self.physical_table = ttk.Treeview(root, columns=("Memory Address",), show="headings", height=10)
+        self.physical_table.heading("Memory Address", text="Memory Address")
         self.physical_table.grid(row=1, column=4, padx=5, pady=5)
 
-        # Buttons to control address generation and translation
-        tk.Button(root, text="Generate Virtual Address", command=self.generate_virtual_address).grid(row=2, column=0, pady=10)
-        tk.Button(root, text="Translate to Physical Address", command=self.translate_address).grid(row=2, column=1, pady=10)
+        # Add Restore from Disk Button
+        tk.Button(root, text="Restore from Disk", command=self.restore_from_disk).grid(row=2, column=2, pady=10)
+
+        # Preload Fixed Memory Addresses and Examples
+        self.preload_fixed_memory_addresses()
+        self.preload_examples()
+
+    def preload_fixed_memory_addresses(self):
+        # Add fixed memory address ranges
+        fixed_ranges = [
+            "0-15",
+            "16-31",
+            "32-47",
+            "48-63"
+        ]
+        for address_range in fixed_ranges:
+            self.physical_table.insert("", tk.END, values=(address_range,))
+
+    def preload_examples(self):
+        # Predefined virtual addresses with Status field included
+        examples = [
+            {"virtual_address": 0x34, "page_number": 3, "offset": 4, "frame_number": 3, "physical_address": 0x34, "status": "Valid"},
+            {"virtual_address": 0x1A, "page_number": 1, "offset": 10, "frame_number": 1, "physical_address": 0x1A, "status": "Valid"},
+            {"virtual_address": 0x7F, "page_number": 7, "offset": 15, "frame_number": 3, "physical_address": 0x3F, "status": "Valid"},
+            {"virtual_address": 0x8C, "page_number": 8, "offset": 12, "frame_number": 0, "physical_address": 0x0C, "status": "Valid"},
+            {"virtual_address": 0xF5, "page_number": 15, "offset": 5, "frame_number": 3, "physical_address": 0x35, "status": "Valid"},
+            {"virtual_address": 0xF7, "page_number": 8, "offset": 2, "frame_number": 9, "physical_address": "-", "status": "Invalid"},
+        ]
+
+        for example in examples:
+            # Add to address pool
+            self.address_pool.append(example["virtual_address"])
+            self.address_pool_listbox.insert(tk.END, f"Virtual Address: {example['virtual_address']}")
+
+            # Add to virtual address table
+            self.virtual_table.insert("", tk.END, values=(example["page_number"], example["offset"]))
+
+            # Add to page table using preloaded status
+            self.page_table.insert("", tk.END, values=(example["frame_number"], example["status"]))
+
+            # Add to FIFO queue only if frame_number is valid
+            if example["status"] == "Valid" and example["frame_number"] not in self.fifo_queue:
+                self.fifo_queue.append(example["frame_number"])
+                self.fifo_queue_listbox.insert(tk.END, f"Frame {example['frame_number']} - Address {example['physical_address']}")
+
+    def restore_from_disk(self):
+        # Get selected row from Page Table
+        selected_item = self.page_table.selection()
+        if selected_item:
+            # Retrieve frame number from selected row
+            frame_number = self.page_table.item(selected_item, "values")[0]
+            print(f"Restored Frame Number: {frame_number}")
+        else:
+            messagebox.showwarning("No Selection", "Please select a row from the Page Table to restore.")
 
     def generate_virtual_address(self):
-        # Generate a random virtual address
-        virtual_address = random.randint(0, 1023)  # Example address within a range
+        # Generate a random 8-bit virtual address
+        virtual_address = random.randint(0, 255)  # Address range for 8 bits
         self.address_pool.append(virtual_address)
         self.address_pool_listbox.insert(tk.END, f"Virtual Address: {virtual_address}")
         
-        # Calculate frame and offset as example (modify with actual logic)
-        frame = virtual_address // 64
-        offset = virtual_address % 64
-        self.virtual_table.insert("", tk.END, values=(frame, offset))
+        # Calculate page number and offset (8-bit logic)
+        page_number = virtual_address // 16  # Upper 4 bits
+        offset = virtual_address % 16        # Lower 4 bits
+        self.virtual_table.insert("", tk.END, values=(page_number, offset))
 
     def update_fifo_queue(self, frame, physical_address):
-        # Add frame to FIFO queue and update the listbox
         if frame not in self.fifo_queue:
             if len(self.fifo_queue) >= self.max_frames:
-                # Remove the oldest frame if max size is reached
                 removed_frame = self.fifo_queue.pop(0)
                 self.update_physical_address_space(removed_frame, remove=True)
             self.fifo_queue.append(frame)
             self.fifo_queue_listbox.insert(tk.END, f"Frame {frame} - Address {physical_address}")
 
     def update_physical_address_space(self, frame, physical_address=None, remove=False):
-        # Update the Physical Address Space table
         if remove:
             # Remove the frame from the physical address space
             items = self.physical_table.get_children()
             for item in items:
-                if self.physical_table.item(item, "values")[0] == f"Frame {frame}":
+                if f"{frame * 16}-{(frame + 1) * 16 - 1}" in self.physical_table.item(item, "values")[0]:
                     self.physical_table.delete(item)
                     break
         else:
-            # Add frame with its physical address to the physical address space
-            self.physical_table.insert("", tk.END, values=(f"Frame {frame} - Address {physical_address}"))
-
-    def translate_address(self):
-        # Check if an address is selected in the Address Pool
-        selected_index = self.address_pool_listbox.curselection()
-        if selected_index:
-            # Get the selected virtual address
-            virtual_address = self.address_pool[selected_index[0]]
-            
-            # Example translation logic (replace with your actual logic)
-            frame = virtual_address // 64  # Frame number calculation
-            offset = virtual_address % 64  # Offset within the frame
-            physical_address = frame * 64 + offset  # Physical address calculation
-
-            # Update the Page Table with frame and validity
-            self.page_table.insert("", tk.END, values=(frame, "Valid" if frame < 4 else "Invalid"))
-            
-            # Update FIFO Queue and Physical Address Space
-            self.update_fifo_queue(frame, physical_address)
-            self.update_physical_address_space(frame, physical_address)
-
-            # Show a message indicating the translated physical address
-            messagebox.showinfo("Translation", f"Virtual Address {virtual_address} translated to Physical Address {physical_address}")
-        else:
-            messagebox.showwarning("Warning", "Please select a virtual address from the Address Pool to translate.")
+            # Add frame with its memory address range to the physical address space
+            address_range_start = frame * 16
+            address_range_end = address_range_start + 15
+            self.physical_table.insert(
+                "", 
+                tk.END, 
+                values=(f"{address_range_start}-{address_range_end}")
+            )
 
 root = tk.Tk()
 app = AddressTranslationGUI(root)
