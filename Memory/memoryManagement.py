@@ -9,6 +9,12 @@ class AddressTranslationGUI:
         self.address_pool = []  # Store generated addresses
         self.fifo_queue = []    # FIFO queue for frames
         self.max_frames = 4     # Maximum frames in FIFO
+        
+        #tlb
+        self.tlb = self.preload_tlb()
+        self.hit_count = 0
+        self.miss_count = 0
+
 
         # Address Pool
         tk.Label(root, text="Address Pool", font=("Arial", 14)).grid(row=0, column=0, sticky="w")
@@ -46,6 +52,19 @@ class AddressTranslationGUI:
         # Preload Fixed Memory Addresses and Examples
         self.preload_fixed_memory_addresses()
         self.preload_examples()
+
+    def preload_tlb(self):
+        """Preload the TLB with example entries."""
+        return {
+            10: (31, 1, "RW"),  # Virtual Page -> (Physical Page, Modified, Protection)
+            3: (3, 1, "RW"),
+            13: (29, 1, "RW"),
+            12: (62, 1, "RW"),
+            1: (1, 1, "RW"),
+            21: (45, 0, "R"),
+            60: (14, 1, "RW"),
+            61: (75, 1, "RW"),
+        }
 
     def preload_fixed_memory_addresses(self):
         # Add fixed memory address ranges
@@ -105,6 +124,33 @@ class AddressTranslationGUI:
         page_number = virtual_address // 16  # Upper 4 bits
         offset = virtual_address % 16        # Lower 4 bits
         self.virtual_table.insert("", tk.END, values=(page_number, offset))
+
+        return virtual_address
+
+
+    def getMemory(self, virtual_address):
+        """Translate a virtual address to a physical address using the TLB."""
+        virtual_page = virtual_address // 16  # Upper 4 bits
+        offset = virtual_address % 16        # Lower 4 bits
+
+        if virtual_page in self.tlb:
+            # TLB Hit
+            physical_page, modified, protection = self.tlb[virtual_page]
+            self.hit_count += 1
+            return physical_page * 16 + offset  # Calculate PA
+        
+        else:
+            # TLB Miss
+            self.miss_count += 1
+            messagebox.showwarning("TLB Miss", f"Page {virtual_page} not found in TLB.")
+            self.translateVirtualAddress()
+            return None
+        
+    def get_tlb_stats(self):
+        return {"hits": self.hit_count, "misses": self.miss_count}
+    
+    def translateVirtualAddress(self):
+        return None
 
     def update_fifo_queue(self, frame, physical_address):
         if frame not in self.fifo_queue:
