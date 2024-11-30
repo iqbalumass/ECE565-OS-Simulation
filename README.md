@@ -33,3 +33,13 @@ Welcome to the **ECE565 Operating Systems Simulation** repository! This project 
 - Required Python libraries (install via `pip`):
   ```bash
   pip install matplotlib tkinter numpy
+
+
+## Contributing
+We welcome contributions! If you'd like to improve this simulation:
+
+Fork the repository.
+Create a new branch: git checkout -b feature-name.
+Commit your changes: git commit -m 'Add new feature'.
+Push to the branch: git push origin feature-name.
+Submit a pull request.
