@@ -1,9 +1,17 @@
 from abc import ABC, abstractmethod
 
 class BLOCK:
-    def __init__(self):
+    def __init__(self, block_id,start_address):
+        self.block_id = block_id  # Unique Block ID (0 to 31)
         self.files = None
+        self.addresses = list(range(start_address, start_address + 4))  # 4 consecutive addresses per block
 
+    def __str__(self):
+        """
+        String representation of the block's state.
+        """
+        return f"Block {self.block_id}: File = {self.files}, Addresses = {self.addresses}"
+    
 class BlockGUI(ABC): 
     @abstractmethod
     def __init__(self):

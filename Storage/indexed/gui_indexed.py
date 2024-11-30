@@ -16,11 +16,13 @@ action_type=None
 pos=None
 
 class IndexedAllocationBLOCK(BLOCK):
-    def __init__(self, file=None, next_block=None, data_blocks=None, is_index_block=False):
-        self.file = file  # The file this block belongs to (None if empty)
+    def __init__(self, block_id,file=None, next_block=None, data_blocks=None, is_index_block=False ):
+        self.files = file  # The file this block belongs to (None if empty)
         self.next_block = next_block  # Link to the next block (used in linked allocation)
         self.data_blocks = data_blocks or []  # Data blocks for indexed allocation (empty list by default)
         self.is_index_block = is_index_block  # Flag to indicate if it's an index block
+        self.block_id = block_id  # Unique Block ID (0 to 31)
+        self.addresses = list(range(block_id * 4, block_id * 4 + 4))  # 4 addresses per block
 
 class IndexedAllocationBlockGUI(BlockGUI):
     def __init__(self, root):
@@ -86,6 +88,8 @@ class IndexedAllocationBlockGUI(BlockGUI):
 
             self.indexed_allocation = {}
 
+            
+
             for file_info in self.directory_data:
                 file_name = file_info["file"]
                 index_block = file_info["start"]  # The index block
@@ -103,20 +107,31 @@ class IndexedAllocationBlockGUI(BlockGUI):
                     "index_block": index_block,
                     "data_blocks": data_blocks
                 }
-
+                
                 # Assign the file to its blocks
                 # Mark index block (distinguish it by passing is_index_block=True)
-                self.blocks[index_block] = IndexedAllocationBLOCK(file=file_name, next_block=None, data_blocks=data_blocks, is_index_block=True)
-                
+                self.blocks[index_block] = IndexedAllocationBLOCK(block_id=index_block,file=file_name, next_block=None, data_blocks=data_blocks, is_index_block=True)
+                #print('again')
                 # Mark data blocks (starting from index block's next block)
-                for block in data_blocks:
-                    self.blocks[block] = IndexedAllocationBLOCK(file=file_name, next_block=None)
+                for i,block in enumerate(data_blocks):
+                    #print(f'len(data_blocks) is {len(data_blocks)}')
+                    #print(f'index_block is {index_block} ')
+                    #print(f'i is {i}')
+                    block_id=index_block+i+1
+                    self.blocks[block] = IndexedAllocationBLOCK(block_id,file=file_name, next_block=None)
 
+             # Initialize all blocks first to handle empty blocks
+            for block_id in range(32):
+                # Check if the block is not already an IndexedAllocationBLOCK instance
+                if not isinstance(self.blocks[block_id], IndexedAllocationBLOCK):
+                    # Assign a new IndexedAllocationBLOCK object with no file associated
+                    #print(f'make block_id {block_id} file= None object')
+                    self.blocks[block_id] = IndexedAllocationBLOCK(block_id=block_id, file=None)
             # Now update the labels to reflect the new indexed allocation
             self.update_gui_blocks()
 
             # Enable the Update Button after loading entries
-            # self.update_button.config(state=tk.NORMAL)
+            #self.update_button.config(state=tk.NORMAL)
 
         except FileNotFoundError:
             messagebox.showerror("Error", "block_entries.json file not found.")
@@ -211,7 +226,7 @@ class IndexedAllocationBlockGUI(BlockGUI):
 
             # Mark the new block as used
             self.blocks[new_block] = IndexedAllocationBLOCK(file=file_name, next_block=None)
-            print(f'new block is {new_block}')
+            print(f'(From Indexed Allocation): new block is {new_block}')
             messagebox.showinfo("Indexed Allocation GUI", f"Adding New Block at Block {new_block} .")
 
             # Update the GUI with the new block
@@ -220,7 +235,7 @@ class IndexedAllocationBlockGUI(BlockGUI):
             # Increment the write counter
             writes += 1
             self.update_read_write_label()
-            self.update_file_label()
+            #self.update_file_label()
 
     
 
@@ -254,7 +269,7 @@ class IndexedAllocationBlockGUI(BlockGUI):
             
             
             self.update_read_write_label()
-            self.update_file_label()
+            #self.update_file_label()
 
     '''
     These add() and remove() are for the integrated module. Please do not consider duplicate.
@@ -283,8 +298,8 @@ class IndexedAllocationBlockGUI(BlockGUI):
             self.indexed_allocation[file_name]["data_blocks"] = data_blocks
 
             # Mark the new block as used
-            self.blocks[new_block] = IndexedAllocationBLOCK(file=file_name, next_block=None)
-            print(f'new block is {new_block}')
+            self.blocks[new_block] = IndexedAllocationBLOCK(block_id=new_block,file=file_name, next_block=None)
+            print(f'(From Indexed Allocation): new block is {new_block}')
             messagebox.showinfo("Indexed Allocation GUI", f"Adding New Block at Block {new_block} .")
 
             # Update the GUI with the new block
@@ -293,7 +308,7 @@ class IndexedAllocationBlockGUI(BlockGUI):
             # Increment the write counter
             writes += 1
             self.update_read_write_label()
-            self.update_file_label()    
+            #self.update_file_label()    
 
     def remove(self,file_name, start, length, position):
             
@@ -325,11 +340,12 @@ class IndexedAllocationBlockGUI(BlockGUI):
             
             
             self.update_read_write_label()
-            self.update_file_label()
+            ##self.update_file_label()
 
     def find_free_block(self):
         for i in range(32):  # Assuming there are 32 blocks
-            if not self.blocks[i]:
+            # Check if the block is an instance of IndexedAllocationBLOCK and has no file associated
+            if isinstance(self.blocks[i], IndexedAllocationBLOCK) and self.blocks[i].files is None:
                 return i
         raise Exception("No free block available")
 
@@ -339,16 +355,16 @@ class IndexedAllocationBlockGUI(BlockGUI):
         
         # Update label text with file and next block information
         if block:
-            label.config(text=f"Block {index}\nFile: {block.file or 'None'}")
+            label.config(text=f"Block {index}\nFile: {block.files or 'None'}\nNext: {block.next_block or 'None'}")
             
             if block.is_index_block:  # If the block is an index block, highlight it with a distinct color
                 label.config(bg="light green")  # Highlight index blocks in light green
-            elif block.file:  # If the block belongs to a file
+            elif block.files:  # If the block belongs to a file
                 label.config(bg="light blue")  # Highlight other blocks in light blue
             else:
                 label.config(bg="white")  # Reset background if the block is not in use
         else:
-            label.config(text=f"Block {index}\nFile: None")
+            label.config(text=f"Block {index}\nFile: None\nNext: None")
             label.config(bg="white")
 
     def update_gui_blocks(self):
@@ -357,14 +373,14 @@ class IndexedAllocationBlockGUI(BlockGUI):
 
     def update_read_write_label(self):
         self.read_write_label.config(text=f"Reads: {reads} | Writes: {writes}")
-    def update_file_label(self):
-        self.file_label.config(text=f'File: {file_name} | Action: {action_type} | Position : {pos}')
+    #def update_file_label(self):
+     #   self.file_label.config(text=f'File: {file_name} | Action: {action_type} | Position : {pos}')
 
     def show_tooltip(self, event, index):
         block = self.blocks[index]
     
         if block:  # If the block is not None, show detailed info
-            file_info = f"File: {block.file or 'None'}"
+            file_info = f"File: {block.files or 'None'}"
             next_block_info = f"Next: {block.next_block or 'None'}"
             index_block_info = "Index Block" if block.is_index_block else "Data Block"
             
@@ -385,20 +401,29 @@ class IndexedAllocationBlockGUI(BlockGUI):
         
         # Position the tooltip near the label
         x, y, _, _ = event.widget.bbox("insert")
-        #x=event.x_root
-        #y=event.y_root
-        
         self.tooltip.place(x=x + 90, y=y + 90)
 
-        # Get the cursor's position relative to the widget
-        
-        
     def hide_tooltip(self, event=None):
         self.tooltip.place_forget()
+
+    def read(self,vpn):
+        # In Indexed Allocation, use the index block to find the corresponding data block
+        current_block = self.blocks[vpn // 4]  # Determine which file (or block group) the VPN belongs to
+        address_index = vpn % 4  # Determine the address within  block
+        #print(f'current_block is {current_block.block_id} and address_index is {address_index}')
+        print(f"(From Indexed Allocation): Indexed Allocation: Read VPN {vpn} -> Block {current_block.block_id}, Address {current_block.addresses[address_index]}")
+        return current_block.addresses[address_index]
+       
+    def write(self, vpn):
+        print('write() for ????')
+
 
 def main():
     root = tk.Tk()
     app = IndexedAllocationBlockGUI(root)
+    # for i in range (0,32):
+    ret_value= app.read(4)
+    #print(ret_value)
     root.mainloop()
 
 if __name__ == "__main__":
