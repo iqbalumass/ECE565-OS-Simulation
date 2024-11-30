@@ -15,8 +15,10 @@ action_type=None
 pos=None
 
 class ContiguousAllocationBLOCK(BLOCK):
-    def __init__(self, file):
+    def __init__(self, file,block_id):
         self.file = file
+        self.block_id = block_id  # Unique Block ID (0 to 31)
+        self.addresses = list(range(int(block_id) * 4, int(block_id) * 4 + 4))  # 4 addresses per block
 
 class ContiguousAllocationBlockGUI(BlockGUI):
     def __init__(self, root):
@@ -32,9 +34,9 @@ class ContiguousAllocationBlockGUI(BlockGUI):
         self.read_write_label = tk.Label(self.root, text=f"Reads: {reads} | Writes: {writes}")
         self.read_write_label.pack(pady=5)
 
-         # File, action, position label
-        self.file_label = tk.Label(self.root, text=f"File: {file_name} | Action: {action_type} | Position : {pos}")
-        self.file_label.pack(pady=5)
+        #  # File, action, position label
+        # self.file_label = tk.Label(self.root, text=f"File: {file_name} | Action: {action_type} | Position : {pos}")
+        # self.file_label.pack(pady=5)
         
 
         self.blocks = [None] * 32  # Placeholder for BLOCK objects
@@ -57,8 +59,8 @@ class ContiguousAllocationBlockGUI(BlockGUI):
         
 
         # Update button (disabled initially)
-        self.update_button = tk.Button(self.root, text="Update File", state=tk.DISABLED, command=self.update_file)
-        self.update_button.pack(pady=5)
+        # self.update_button = tk.Button(self.root, text="Update File", state=tk.DISABLED, command=#self.update_file)
+        # self.update_button.pack(pady=5)
 
         # Automatically load entries when initializing the GUI
         self.load_entries()  
@@ -78,7 +80,7 @@ class ContiguousAllocationBlockGUI(BlockGUI):
             # Initialize BLOCK objects from JSON data
             for i in range(32):
                 block_data = data.get(str(i), {"file": None})
-                self.blocks[i] = ContiguousAllocationBLOCK(block_data["file"])
+                self.blocks[i] = ContiguousAllocationBLOCK(block_data["file"],i)
                 self.update_block_label(i)
 
                 
@@ -92,11 +94,11 @@ class ContiguousAllocationBlockGUI(BlockGUI):
             
             
             # Print indexes with null files
-            print("Blocks with null files:")
-            print(self.null_file_indexes)
+            # print("Blocks with null files:")
+            # print(self.null_file_indexes)
 
             # Enable the Update button after loading
-            self.update_button.config(state=tk.NORMAL)
+            #self.update_button.config(state=tk.NORMAL)
             # messagebox.showinfo("Contiguous Allocation GUI", "Block entries loaded from JSON.")
 
             
@@ -125,8 +127,8 @@ class ContiguousAllocationBlockGUI(BlockGUI):
         """Update the reads and writes label."""
         self.read_write_label.config(text=f"Reads: {reads} | Writes: {writes}")
     
-    def update_file_label(self):
-        self.file_label.config(text=f'File: {file_name} | Action: {action_type} | Position : {pos}')
+    # def update_file_label(self):
+    #     self.file_label.config(text=f'File: {file_name} | Action: {action_type} | Position : {pos}')
         
         
     def update_file(self):
@@ -173,8 +175,8 @@ class ContiguousAllocationBlockGUI(BlockGUI):
             start = entry["start"]
             length = entry["length"]
 
-            print(f'start is {start}')
-            print(f'length is {length}')
+            # print(f'start is {start}')
+            # print(f'length is {length}')
 
             # Call add or remove function based on action_type
             if action_type == "Add":
@@ -195,14 +197,14 @@ class ContiguousAllocationBlockGUI(BlockGUI):
             if position == "beginning":
                 
                 if start-1<0:
-                    print('invalid')
+                    print('(From Contiguous Allocation): invalid')
                     target=start
                 else: 
                     target=start-1
-                    print(f'target is {target}')
+                    print(f'(From Contiguous Allocation): target is {target}')
                 
                 if self.blocks[target].file is not None:
-                    print(f"Block {target} is already occupied. Checking for space to shift...")
+                    print(f"(From Contiguous Allocation): Block {target} is already occupied. Checking for space to shift...")
                     #Ensure there is space to shift blocks
                     if target + length < len(self.blocks) and self.blocks[target + length].file is None:
                         # Shift blocks to the right to make space
@@ -219,11 +221,11 @@ class ContiguousAllocationBlockGUI(BlockGUI):
                             
                         else:
                             start_index=start+length-1
-                            print(f'start_index is {start_index}')
+                            print(f'(From Contiguous Allocation): start_index is {start_index}')
 
                         for i in range(start_index , target, -1):
                             self.blocks[i].file = self.blocks[i - 1].file if i > target else None
-                            print(f"Shifted block {i-1} to block {i}")
+                            print(f"(From Contiguous Allocation) Shifted block {i-1} to block {i}")
                             self.block_labels[i].config(bg="light blue")
                             updated_indices.append(i)
                             reads=reads+1
@@ -233,7 +235,7 @@ class ContiguousAllocationBlockGUI(BlockGUI):
                         self.blocks[target].file = file_name
                         self.block_labels[target].config(bg="light blue")
                         writes=writes+1
-                        print(f"Block added for file '{file_name}' at position {target}")
+                        print(f"(From Contiguous Allocation) Block added for file '{file_name}' at position {target}")
                         messagebox.showinfo("Contiguous Allocation GUI", f"Block added for file '{file_name}' at position {target}")
                         
                 else:
@@ -242,7 +244,7 @@ class ContiguousAllocationBlockGUI(BlockGUI):
                     self.block_labels[target].config(bg="light blue")
                     updated_indices.append(target)
                     writes=writes+1
-                    print(f"Block added for file '{file_name}' at position {target}")
+                    print(f"(From Contiguous Allocation) Block added for file '{file_name}' at position {target}")
                     messagebox.showinfo("Contiguous Allocation GUI", f"Block added for file '{file_name}' at position {target}")
                         
                 
@@ -250,13 +252,13 @@ class ContiguousAllocationBlockGUI(BlockGUI):
             
             if position=="end":
                 if start+length==len(self.blocks): #in list, 28+4=32 and self.blocks[32] is out of range
-                    print('invalid')
+                    print('(From Contiguous Allocation): invalid')
                     target=start+length-1
                 else: 
                     target=start+length
                 
                 if self.blocks[target].file is not None:
-                    print(f"Block {target} is already occupied. Checking for space to shift...")
+                    print(f"(From Contiguous Allocation): Block {target} is already occupied. Checking for space to shift...")
                     #Ensure there is space to shift blocks
                     if start-1>0 and self.blocks[start-1].file is None:
                         # Shift blocks to the left to make space
@@ -275,11 +277,11 @@ class ContiguousAllocationBlockGUI(BlockGUI):
                             
                         else:
                             stop_index=start+length
-                        print(f'stop_index is {stop_index}')
+                        print(f'(From Contiguous Allocation): stop_index is {stop_index}')
 
                         for i in range(start_index , stop_index, 1):
                             self.blocks[i].file = self.blocks[i + 1].file if i < target else None
-                            print(f"Shifted block {i+1} to block {i}")
+                            print(f"(From Contiguous Allocation): Shifted block {i+1} to block {i}")
                             self.block_labels[i].config(bg="light blue")
                             updated_indices.append(i)
                             reads=reads+1
@@ -290,7 +292,7 @@ class ContiguousAllocationBlockGUI(BlockGUI):
                         self.block_labels[target].config(bg="light blue")
                         writes=writes+1
                         updated_indices.append(target)
-                        print(f"Block added for file '{file_name}' at position {target}")
+                        print(f"(From Contiguous Allocation): Block added for file '{file_name}' at position {target}")
                         messagebox.showinfo("Contiguous Allocation GUI", f"Block added for file '{file_name}' at position {target}")
 
                         
@@ -300,14 +302,14 @@ class ContiguousAllocationBlockGUI(BlockGUI):
                     self.block_labels[target].config(bg="light blue")
                     updated_indices.append(target)
                     writes=writes+1
-                    print(f"Block added for file '{file_name}' at position {target}")
+                    print(f"(From Contiguous Allocation): Block added for file '{file_name}' at position {target}")
                     messagebox.showinfo("Contiguous Allocation GUI", f"Block added for file '{file_name}' at position {target}")
                     
 
             
             if position=="middle":
-                print("there will always be shifting if there is space-middle case")
-                print('###original length of odd and even case for middle needs to be handled###')
+                print("(From Contiguous Allocation): there will always be shifting if there is space-middle case")
+                print('(From Contiguous Allocation): original length of odd and even case for middle needs to be handled###')
 
                 if start == 0:
                     target = start + (length // 2) #case count where start=0 and length=2
@@ -316,9 +318,9 @@ class ContiguousAllocationBlockGUI(BlockGUI):
                 else:
                     target=start + (length // 2) #other cases
 
-                print(f'target is {target}')
-                print(f'We have to move block item from target block {target}')
-                print(f'Making it a list as we can shift either left or right')
+                print(f'(From Contiguous Allocation): target is {target}')
+                print(f'(From Contiguous Allocation): We have to move block item from target block {target}')
+                print(f'(From Contiguous Allocation): Making it a list as we can shift either left or right')
                 num_of_blocks_to_move=[length//2, (length//2)+1] #if file length is even, we move length//2 blocks, else we move length//2+1 blocks
 
 
@@ -333,13 +335,13 @@ class ContiguousAllocationBlockGUI(BlockGUI):
                     we try and see if Case 1 applies
                     '''
                     if self.blocks[start + length].file==None:
-                        print(f'Block {start + length} is unallocated')
-                        print('shift right')
+                        print(f'(From Contiguous Allocation): Block {start + length} is unallocated')
+                        print('(From Contiguous Allocation): shift right')
                         if length%2==0:
-                            print(f'Moving {num_of_blocks_to_move[0]} block(s)')
-                            print(f"Target is {start+(length//2)}")
+                            print(f'(From Contiguous Allocation): Moving {num_of_blocks_to_move[0]} block(s)')
+                            print(f"(From Contiguous Allocation): Target is {start+(length//2)}")
                             for i in range(start+length,target,-1):
-                                print(f'moving block {i-1} to block {i}')
+                                print(f'(From Contiguous Allocation): moving block {i-1} to block {i}')
                                 self.blocks[i].file=self.blocks[i-1].file
                                 self.block_labels[i].config(bg="light blue")
                                 updated_indices.append(i)
@@ -347,10 +349,10 @@ class ContiguousAllocationBlockGUI(BlockGUI):
                                 reads=reads+1
                                 writes=writes+1
                         else:
-                            print(f'Moving {num_of_blocks_to_move[1]} block(s)')
-                            print(f"Target is {start+(length//2)}")
+                            print(f'(From Contiguous Allocation): Moving {num_of_blocks_to_move[1]} block(s)')
+                            print(f"(From Contiguous Allocation): Target is {start+(length//2)}")
                             for i in range(start+length,target,-1):
-                                print(f'moving block {i-1} to block {i}')
+                                print(f'(From Contiguous Allocation): moving block {i-1} to block {i}')
                                 self.blocks[i].file=self.blocks[i-1].file
                                 self.block_labels[i].config(bg="light blue")
                                 updated_indices.append(i)
@@ -358,13 +360,13 @@ class ContiguousAllocationBlockGUI(BlockGUI):
                                 reads=reads+1
                                 writes=writes+1
                             
-                        print('Allocation space made, now insert at target')  
-                        self.blocks[target]=ContiguousAllocationBLOCK(file_name)
+                        print('(From Contiguous Allocation): Allocation space made, now insert at target')  
+                        self.blocks[target]=ContiguousAllocationBLOCK(file_name,target)
                         #self.blocks[target].file=file_name
-                        print(target)
+                        #print(target)
                         updated_indices.append(target)
                         writes=writes+1
-                        print(f'disk block {target} has {self.blocks[target].file}')
+                        print(f'(From Contiguous Allocation): disk block {target} has {self.blocks[target].file}')
                         messagebox.showinfo("Contiguous Allocation GUI", f"Block added for file '{file_name}' at position {target}")
 
 
@@ -375,13 +377,13 @@ class ContiguousAllocationBlockGUI(BlockGUI):
                     We try and see if case 2 applies
                     '''
                     if self.blocks[start-1].file==None:
-                        print(f'Block {start-1} is unallocated')
-                        print('shift left')
+                        print(f'(From Contiguous Allocation): Block {start-1} is unallocated')
+                        print('(From Contiguous Allocation): shift left')
                         if length%2==0:
-                            print(f'Moving {num_of_blocks_to_move[0]} block(s)')
-                            print(f"Target is {start+(length//2)}")
+                            print(f'(From Contiguous Allocation): Moving {num_of_blocks_to_move[0]} block(s)')
+                            print(f"(From Contiguous Allocation): Target is {start+(length//2)}")
                             for i in range(start-1,target,1):
-                                print(f'moving block {i+1} to block {i}')
+                                print(f'(From Contiguous Allocation): moving block {i+1} to block {i}')
                                 self.blocks[i]=self.blocks[i+1]
                                 self.block_labels[i].config(bg="light blue")
                                 updated_indices.append(i)
@@ -389,10 +391,10 @@ class ContiguousAllocationBlockGUI(BlockGUI):
                                 reads=reads+1
                                 writes=writes+1
                         else:
-                            print(f'Moving {num_of_blocks_to_move[1]} block(s)')
-                            print(f"Target is {start+(length//2)}")
+                            print(f'(From Contiguous Allocation): Moving {num_of_blocks_to_move[1]} block(s)')
+                            print(f"(From Contiguous Allocation): Target is {start+(length//2)}")
                             for i in range(start+length,target,1):
-                                print(f'moving block {i+1} to block {i}')
+                                print(f'(From Contiguous Allocation): moving block {i+1} to block {i}')
                                 self.blocks[i].file=self.blocks[i+1].file
                                 self.block_labels[i].config(bg="light blue")
                                 updated_indices.append(i)
@@ -400,13 +402,13 @@ class ContiguousAllocationBlockGUI(BlockGUI):
                                 reads=reads+1
                                 writes=writes+1
                             
-                        print('Allocation space made, now insert at target')  
-                        self.blocks[target]=ContiguousAllocationBLOCK(file_name)
+                        print('(From Contiguous Allocation): Allocation space made, now insert at target')  
+                        self.blocks[target]=ContiguousAllocationBLOCK(file_name,target)
                         #self.blocks[target].file=file_name
-                        print(target)
+                        #print(target)
                         updated_indices.append(target)
                         writes=writes+1
-                        print(f'disk block {target} has {self.blocks[target].file}')
+                        print(f'(From Contiguous Allocation): disk block {target} has {self.blocks[target].file}')
                         messagebox.showinfo("Contiguous Allocation GUI", f"Block added for file '{file_name}' at position {target}")
 
             
@@ -416,15 +418,15 @@ class ContiguousAllocationBlockGUI(BlockGUI):
                     start>0 and start+length<32, prefer to apply Case 1 than Case 2
                     '''
                     if self.blocks[start + length].file==None:
-                        print(f'Block {start + length} is unallocated')
-                        print('shift right')
-                        print(f'target is {target}')
+                        print(f'(From Contiguous Allocation): Block {start + length} is unallocated')
+                        print('(From Contiguous Allocation): shift right')
+                        print(f'(From Contiguous Allocation): target is {target}')
 
                         if length%2==0:
-                            print(f'Moving {num_of_blocks_to_move[0]} block(s)')
-                            print(f"Target is {start+(length//2)}")
+                            print(f'(From Contiguous Allocation): Moving {num_of_blocks_to_move[0]} block(s)')
+                            print(f"(From Contiguous Allocation): Target is {start+(length//2)}")
                             for i in range(start+length,target,-1):
-                                print(f'moving block {i-1} to block {i}')
+                                print(f'(From Contiguous Allocation): moving block {i-1} to block {i}')
                                 self.blocks[i].file=self.blocks[i-1].file
                                 self.block_labels[i].config(bg="light blue")
                                 updated_indices.append(i)
@@ -432,10 +434,10 @@ class ContiguousAllocationBlockGUI(BlockGUI):
                                 reads=reads+1
                                 writes=writes+1
                         else:
-                            print(f'Moving {num_of_blocks_to_move[1]} block(s)')
-                            print(f"Target is {start+(length//2)}")
+                            print(f'(From Contiguous Allocation): Moving {num_of_blocks_to_move[1]} block(s)')
+                            print(f"(From Contiguous Allocation): Target is {start+(length//2)}")
                             for i in range(start+length,target,-1):
-                                print(f'moving block {i+1} to block {i}')
+                                print(f'(From Contiguous Allocation): moving block {i+1} to block {i}')
                                 self.blocks[i].file=self.blocks[i-1].file
                                 self.block_labels[i].config(bg="light blue")
                                 updated_indices.append(i)
@@ -443,26 +445,26 @@ class ContiguousAllocationBlockGUI(BlockGUI):
                                 reads=reads+1
                                 writes=writes+1
                             
-                        print('Allocation space made, now insert at target')  
-                        self.blocks[target]=ContiguousAllocationBLOCK(file_name)
+                        print('(From Contiguous Allocation): Allocation space made, now insert at target')  
+                        self.blocks[target]=ContiguousAllocationBLOCK(file_name,target)
                         #self.blocks[target].file=file_name
-                        print(target)
+                        #print(target)
                         updated_indices.append(target)
                         writes=writes+1
-                        print(f'disk block {target} has {self.blocks[target].file}')
+                        print(f'(From Contiguous Allocation): disk block {target} has {self.blocks[target].file}')
                         messagebox.showinfo("Contiguous Allocation GUI", f"Block added for file '{file_name}' at position {target}")
 
             
 
                     elif self.blocks[start - 1].file==None:
-                        print(f'Block {start-1} is unallocated')
-                        print('shift left')
+                        print(f'(From Contiguous Allocation): Block {start-1} is unallocated')
+                        print('(From Contiguous Allocation): shift left')
 
                         if length%2==0:
-                            print(f'Moving {num_of_blocks_to_move[0]} block(s)')
-                            print(f"Target is {start+(length//2)}")
+                            print(f'(From Contiguous Allocation): Moving {num_of_blocks_to_move[0]} block(s)')
+                            print(f"(From Contiguous Allocation): Target is {start+(length//2)}")
                             for i in range(start-1,target,1):
-                                print(f'moving block {i+1} to block {i}')
+                                print(f'(From Contiguous Allocation): moving block {i+1} to block {i}')
                                 self.blocks[i].file=self.blocks[i+1].file
                                 self.block_labels[i].config(bg="light blue")
                                 updated_indices.append(i)
@@ -470,10 +472,10 @@ class ContiguousAllocationBlockGUI(BlockGUI):
                                 reads=reads+1
                                 writes=writes+1
                         else:
-                            print(f'Moving {num_of_blocks_to_move[1]} block(s)')
-                            print(f"Target is {start+(length//2)}")
+                            print(f'(From Contiguous Allocation): Moving {num_of_blocks_to_move[1]} block(s)')
+                            print(f"(From Contiguous Allocation): Target is {start+(length//2)}")
                             for i in range(start+length,target,1):
-                                print(f'moving block {i+1} to block {i}')
+                                print(f'(From Contiguous Allocation): moving block {i+1} to block {i}')
                                 self.blocks[i].file=self.blocks[i+1].file
                                 self.block_labels[i].config(bg="light blue")
                                 updated_indices.append(i)
@@ -481,23 +483,23 @@ class ContiguousAllocationBlockGUI(BlockGUI):
                                 reads=reads+1
                                 writes=writes+1
                             
-                        print('Allocation space made, now insert at target')  
-                        self.blocks[target]=ContiguousAllocationBLOCK(file_name)
+                        print('(From Contiguous Allocation): Allocation space made, now insert at target')  
+                        self.blocks[target]=ContiguousAllocationBLOCK(file_name,target)
                         #self.blocks[target].file=file_name
-                        print(target)
+                        #print(target)
                         updated_indices.append(target)
                         writes=writes+1
-                        print(f'disk block {target} has {self.blocks[target].file}')
+                        print(f'(From Contiguous Allocation): disk block {target} has {self.blocks[target].file}')
                         messagebox.showinfo("Contiguous Allocation GUI", f"Block added for file '{file_name}' at position {target}")
 
                     else:
-                        print('no space')
+                        print('(From Contiguous Allocation): no space')
                         messagebox.showinfo()
 
-            print(f"Read:{reads} and Writes:{writes}")
+            print(f"(From Contiguous Allocation): Read:{reads} and Writes:{writes}")
             self.update_block_label(updated_indices)
             self.update_read_write_label()  # Update the reads and writes display
-            self.update_file_label()
+            ##self.update_filel()
 
             #pass  # Implement logic here later
 
@@ -506,10 +508,10 @@ class ContiguousAllocationBlockGUI(BlockGUI):
             updated_indices=[] # Track indices that are updated
 
             if position=="beginning":
-                print(f'remove block at {start}')
+                print(f'(From Contiguous Allocation): remove block at {start}')
                 self.blocks[start]=None
                 for i in range(start, start+length-1,1):
-                    print(f'move block {i+1} to {i}')
+                    print(f'(From Contiguous Allocation): move block {i+1} to {i}')
                     self.blocks[i]=self.blocks[i+1]
                     self.blocks[i+1]=None
                     updated_indices.append(i)
@@ -521,11 +523,11 @@ class ContiguousAllocationBlockGUI(BlockGUI):
                 self.block_labels[start+length-1].config(bg="white")
                 updated_indices.append(start+length-1)
 
-                print(f'block {start+length} is now {self.blocks[start + length-1]}')
+                print(f'(From Contiguous Allocation): block {start+length} is now {self.blocks[start + length-1]}')
 
 
             if position=="end":
-                print(f'remove block at {start+length-1}')
+                print(f'(From Contiguous Allocation): remove block at {start+length-1}')
                 messagebox.showinfo("Contiguous Allocation GUI", f"Removing block for file '{file_name}' at position {start+length-1}")
                 self.blocks[start + length-1]=None
                 highlight_index=start+length-1
@@ -534,14 +536,14 @@ class ContiguousAllocationBlockGUI(BlockGUI):
             
 
             if position=="middle":
-                print(f'remove block at {start+(length//2)}')
+                print(f'(From Contiguous Allocation): remove block at {start+(length//2)}')
                 '''
                 After removing we gotta move the blocks.   
                 '''
                 target=start+(length//2)
                 self.blocks[target]=None
                 for i in range(target, start+length-1,1):
-                    print(f'move block {i+1} to {i}')
+                    print(f'(From Contiguous Allocation): move block {i+1} to {i}')
                     self.blocks[i]=self.blocks[i+1]
                     self.blocks[i+1]=None
                     updated_indices.append(i)
@@ -551,12 +553,12 @@ class ContiguousAllocationBlockGUI(BlockGUI):
             messagebox.showinfo("Contiguous Allocation GUI", f"Removing block for file '{file_name}' at position {target}")
             self.block_labels[start+length-1].config(bg="white")
             updated_indices.append(start+length-1)
-            print(f'block {start+length-1} is now {self.blocks[start + length-1]}')
+            print(f'(From Contiguous Allocation): block {start+length-1} is now {self.blocks[start + length-1]}')
             length=length-1
-            print(f"Read:{reads} and Writes:{writes}")
+            print(f"(From Contiguous Allocation): Read:{reads} and Writes:{writes}")
             self.update_block_label(updated_indices)
             self.update_read_write_label()  # Update the reads and writes display
-            self.update_file_label()
+            ##self.update_filel()
         
         update_button = tk.Button(update_window, text="Update File", command=lambda: confirm_update(self.update_button))
         update_button.grid(row=3, column=0, columnspan=4, pady=10)  # Adjusted position
@@ -574,14 +576,14 @@ class ContiguousAllocationBlockGUI(BlockGUI):
             if position == "beginning":
                 
                 if start-1<0:
-                    print('invalid')
+                    print('(From Contiguous Allocation): invalid')
                     target=start
                 else: 
                     target=start-1
-                    print(f'target is {target}')
+                    print(f'(From Contiguous Allocation): target is {target}')
                 
                 if self.blocks[target].file is not None:
-                    print(f"Block {target} is already occupied. Checking for space to shift...")
+                    print(f"(From Contiguous Allocation): Block {target} is already occupied. Checking for space to shift...")
                     #Ensure there is space to shift blocks
                     if target + length < len(self.blocks) and self.blocks[target + length].file is None:
                         # Shift blocks to the right to make space
@@ -598,11 +600,11 @@ class ContiguousAllocationBlockGUI(BlockGUI):
                             
                         else:
                             start_index=start+length-1
-                            print(f'start_index is {start_index}')
+                            print(f'(From Contiguous Allocation): start_index is {start_index}')
 
                         for i in range(start_index , target, -1):
                             self.blocks[i].file = self.blocks[i - 1].file if i > target else None
-                            print(f"Shifted block {i-1} to block {i}")
+                            print(f"(From Contiguous Allocation): Shifted block {i-1} to block {i}")
                             self.block_labels[i].config(bg="light blue")
                             updated_indices.append(i)
                             reads=reads+1
@@ -612,7 +614,7 @@ class ContiguousAllocationBlockGUI(BlockGUI):
                         self.blocks[target].file = file_name
                         self.block_labels[target].config(bg="light blue")
                         writes=writes+1
-                        print(f"Block added for file '{file_name}' at position {target}")
+                        print(f"(From Contiguous Allocation): Block added for file '{file_name}' at position {target}")
                         messagebox.showinfo("Contiguous Allocation GUI", f"Block added for file '{file_name}' at position {target}")
                         
                 else:
@@ -621,7 +623,7 @@ class ContiguousAllocationBlockGUI(BlockGUI):
                     self.block_labels[target].config(bg="light blue")
                     updated_indices.append(target)
                     writes=writes+1
-                    print(f"Block added for file '{file_name}' at position {target}")
+                    print(f"(From Contiguous Allocation): Block added for file '{file_name}' at position {target}")
                     messagebox.showinfo("Contiguous Allocation GUI", f"Block added for file '{file_name}' at position {target}")
                         
                 
@@ -629,13 +631,13 @@ class ContiguousAllocationBlockGUI(BlockGUI):
             
             if position=="end":
                 if start+length==len(self.blocks): #in list, 28+4=32 and self.blocks[32] is out of range
-                    print('invalid')
+                    print('(From Contiguous Allocation): invalid')
                     target=start+length-1
                 else: 
                     target=start+length
                 
                 if self.blocks[target].file is not None:
-                    print(f"Block {target} is already occupied. Checking for space to shift...")
+                    print(f"(From Contiguous Allocation): Block {target} is already occupied. Checking for space to shift...")
                     #Ensure there is space to shift blocks
                     if start-1>0 and self.blocks[start-1].file is None:
                         # Shift blocks to the left to make space
@@ -654,11 +656,11 @@ class ContiguousAllocationBlockGUI(BlockGUI):
                             
                         else:
                             stop_index=start+length
-                        print(f'stop_index is {stop_index}')
+                        print(f'(From Contiguous Allocation): stop_index is {stop_index}')
 
                         for i in range(start_index , stop_index, 1):
                             self.blocks[i].file = self.blocks[i + 1].file if i < target else None
-                            print(f"Shifted block {i+1} to block {i}")
+                            print(f"(From Contiguous Allocation): Shifted block {i+1} to block {i}")
                             self.block_labels[i].config(bg="light blue")
                             updated_indices.append(i)
                             reads=reads+1
@@ -669,7 +671,7 @@ class ContiguousAllocationBlockGUI(BlockGUI):
                         self.block_labels[target].config(bg="light blue")
                         writes=writes+1
                         updated_indices.append(target)
-                        print(f"Block added for file '{file_name}' at position {target}")
+                        print(f"(From Contiguous Allocation): Block added for file '{file_name}' at position {target}")
                         messagebox.showinfo("Contiguous Allocation GUI", f"Block added for file '{file_name}' at position {target}")
 
                         
@@ -679,14 +681,14 @@ class ContiguousAllocationBlockGUI(BlockGUI):
                     self.block_labels[target].config(bg="light blue")
                     updated_indices.append(target)
                     writes=writes+1
-                    print(f"Block added for file '{file_name}' at position {target}")
+                    print(f"(From Contiguous Allocation): Block added for file '{file_name}' at position {target}")
                     messagebox.showinfo("Contiguous Allocation GUI", f"Block added for file '{file_name}' at position {target}")
                     
 
             
             if position=="middle":
-                print("there will always be shifting if there is space-middle case")
-                print('###original length of odd and even case for middle needs to be handled###')
+                print("(From Contiguous Allocation): there will always be shifting if there is space-middle case")
+                print('(From Contiguous Allocation): original length of odd and even case for middle needs to be handled###')
 
                 if start == 0:
                     target = start + (length // 2) #case count where start=0 and length=2
@@ -695,9 +697,9 @@ class ContiguousAllocationBlockGUI(BlockGUI):
                 else:
                     target=start + (length // 2) #other cases
 
-                print(f'target is {target}')
-                print(f'We have to move block item from target block {target}')
-                print(f'Making it a list as we can shift either left or right')
+                print(f'(From Contiguous Allocation): target is {target}')
+                print(f'(From Contiguous Allocation): We have to move block item from target block {target}')
+                print(f'(From Contiguous Allocation): Making it a list as we can shift either left or right')
                 num_of_blocks_to_move=[length//2, (length//2)+1] #if file length is even, we move length//2 blocks, else we move length//2+1 blocks
 
 
@@ -712,13 +714,13 @@ class ContiguousAllocationBlockGUI(BlockGUI):
                     we try and see if Case 1 applies
                     '''
                     if self.blocks[start + length].file==None:
-                        print(f'Block {start + length} is unallocated')
-                        print('shift right')
+                        print(f'(From Contiguous Allocation): Block {start + length} is unallocated')
+                        print('(From Contiguous Allocation): shift right')
                         if length%2==0:
-                            print(f'Moving {num_of_blocks_to_move[0]} block(s)')
-                            print(f"Target is {start+(length//2)}")
+                            print(f'(From Contiguous Allocation): Moving {num_of_blocks_to_move[0]} block(s)')
+                            print(f"(From Contiguous Allocation): Target is {start+(length//2)}")
                             for i in range(start+length,target,-1):
-                                print(f'moving block {i-1} to block {i}')
+                                print(f'(From Contiguous Allocation): moving block {i-1} to block {i}')
                                 self.blocks[i].file=self.blocks[i-1].file
                                 self.block_labels[i].config(bg="light blue")
                                 updated_indices.append(i)
@@ -726,10 +728,10 @@ class ContiguousAllocationBlockGUI(BlockGUI):
                                 reads=reads+1
                                 writes=writes+1
                         else:
-                            print(f'Moving {num_of_blocks_to_move[1]} block(s)')
-                            print(f"Target is {start+(length//2)}")
+                            print(f'(From Contiguous Allocation): Moving {num_of_blocks_to_move[1]} block(s)')
+                            print(f"(From Contiguous Allocation): Target is {start+(length//2)}")
                             for i in range(start+length,target,-1):
-                                print(f'moving block {i-1} to block {i}')
+                                print(f'(From Contiguous Allocation): moving block {i-1} to block {i}')
                                 self.blocks[i].file=self.blocks[i-1].file
                                 self.block_labels[i].config(bg="light blue")
                                 updated_indices.append(i)
@@ -737,13 +739,13 @@ class ContiguousAllocationBlockGUI(BlockGUI):
                                 reads=reads+1
                                 writes=writes+1
                             
-                        print('Allocation space made, now insert at target')  
-                        self.blocks[target]=ContiguousAllocationBLOCK(file_name)
+                        print('(From Contiguous Allocation): Allocation space made, now insert at target')  
+                        self.blocks[target]=ContiguousAllocationBLOCK(file_name,target)
                         #self.blocks[target].file=file_name
-                        print(target)
+                        #print(target)
                         updated_indices.append(target)
                         writes=writes+1
-                        print(f'disk block {target} has {self.blocks[target].file}')
+                        print(f'(From Contiguous Allocation): disk block {target} has {self.blocks[target].file}')
                         messagebox.showinfo("Contiguous Allocation GUI", f"Block added for file '{file_name}' at position {target}")
 
 
@@ -754,13 +756,13 @@ class ContiguousAllocationBlockGUI(BlockGUI):
                     We try and see if case 2 applies
                     '''
                     if self.blocks[start-1].file==None:
-                        print(f'Block {start-1} is unallocated')
-                        print('shift left')
+                        print(f'(From Contiguous Allocation): Block {start-1} is unallocated')
+                        print('(From Contiguous Allocation): shift left')
                         if length%2==0:
-                            print(f'Moving {num_of_blocks_to_move[0]} block(s)')
-                            print(f"Target is {start+(length//2)}")
+                            print(f'(From Contiguous Allocation): Moving {num_of_blocks_to_move[0]} block(s)')
+                            print(f"(From Contiguous Allocation): Target is {start+(length//2)}")
                             for i in range(start-1,target,1):
-                                print(f'moving block {i+1} to block {i}')
+                                print(f'(From Contiguous Allocation): moving block {i+1} to block {i}')
                                 self.blocks[i]=self.blocks[i+1]
                                 self.block_labels[i].config(bg="light blue")
                                 updated_indices.append(i)
@@ -768,10 +770,10 @@ class ContiguousAllocationBlockGUI(BlockGUI):
                                 reads=reads+1
                                 writes=writes+1
                         else:
-                            print(f'Moving {num_of_blocks_to_move[1]} block(s)')
-                            print(f"Target is {start+(length//2)}")
+                            print(f'(From Contiguous Allocation): Moving {num_of_blocks_to_move[1]} block(s)')
+                            print(f"(From Contiguous Allocation): Target is {start+(length//2)}")
                             for i in range(start+length,target,1):
-                                print(f'moving block {i+1} to block {i}')
+                                print(f'(From Contiguous Allocation): moving block {i+1} to block {i}')
                                 self.blocks[i].file=self.blocks[i+1].file
                                 self.block_labels[i].config(bg="light blue")
                                 updated_indices.append(i)
@@ -779,13 +781,13 @@ class ContiguousAllocationBlockGUI(BlockGUI):
                                 reads=reads+1
                                 writes=writes+1
                             
-                        print('Allocation space made, now insert at target')  
-                        self.blocks[target]=ContiguousAllocationBLOCK(file_name)
+                        print('(From Contiguous Allocation): Allocation space made, now insert at target')  
+                        self.blocks[target]=ContiguousAllocationBLOCK(file_name,target)
                         #self.blocks[target].file=file_name
-                        print(target)
+                        #print(target)
                         updated_indices.append(target)
                         writes=writes+1
-                        print(f'disk block {target} has {self.blocks[target].file}')
+                        print(f'(From Contiguous Allocation): disk block {target} has {self.blocks[target].file}')
                         messagebox.showinfo("Contiguous Allocation GUI", f"Block added for file '{file_name}' at position {target}")
 
             
@@ -795,15 +797,15 @@ class ContiguousAllocationBlockGUI(BlockGUI):
                     start>0 and start+length<32, prefer to apply Case 1 than Case 2
                     '''
                     if self.blocks[start + length].file==None:
-                        print(f'Block {start + length} is unallocated')
-                        print('shift right')
-                        print(f'target is {target}')
+                        print(f'(From Contiguous Allocation): Block {start + length} is unallocated')
+                        print('(From Contiguous Allocation): shift right')
+                        print(f'(From Contiguous Allocation): target is {target}')
 
                         if length%2==0:
-                            print(f'Moving {num_of_blocks_to_move[0]} block(s)')
-                            print(f"Target is {start+(length//2)}")
+                            print(f'(From Contiguous Allocation): Moving {num_of_blocks_to_move[0]} block(s)')
+                            print(f"(From Contiguous Allocation): Target is {start+(length//2)}")
                             for i in range(start+length,target,-1):
-                                print(f'moving block {i-1} to block {i}')
+                                print(f'(From Contiguous Allocation): moving block {i-1} to block {i}')
                                 self.blocks[i].file=self.blocks[i-1].file
                                 self.block_labels[i].config(bg="light blue")
                                 updated_indices.append(i)
@@ -811,10 +813,10 @@ class ContiguousAllocationBlockGUI(BlockGUI):
                                 reads=reads+1
                                 writes=writes+1
                         else:
-                            print(f'Moving {num_of_blocks_to_move[1]} block(s)')
-                            print(f"Target is {start+(length//2)}")
+                            print(f'(From Contiguous Allocation): Moving {num_of_blocks_to_move[1]} block(s)')
+                            print(f"(From Contiguous Allocation): Target is {start+(length//2)}")
                             for i in range(start+length,target,-1):
-                                print(f'moving block {i+1} to block {i}')
+                                print(f'(From Contiguous Allocation): moving block {i+1} to block {i}')
                                 self.blocks[i].file=self.blocks[i-1].file
                                 self.block_labels[i].config(bg="light blue")
                                 updated_indices.append(i)
@@ -822,26 +824,26 @@ class ContiguousAllocationBlockGUI(BlockGUI):
                                 reads=reads+1
                                 writes=writes+1
                             
-                        print('Allocation space made, now insert at target')  
-                        self.blocks[target]=ContiguousAllocationBLOCK(file_name)
+                        print('(From Contiguous Allocation): Allocation space made, now insert at target')  
+                        self.blocks[target]=ContiguousAllocationBLOCK(file_name,target)
                         #self.blocks[target].file=file_name
-                        print(target)
+                        #print(target)
                         updated_indices.append(target)
                         writes=writes+1
-                        print(f'disk block {target} has {self.blocks[target].file}')
+                        print(f'(From Contiguous Allocation): disk block {target} has {self.blocks[target].file}')
                         messagebox.showinfo("Contiguous Allocation GUI", f"Block added for file '{file_name}' at position {target}")
 
             
 
                     elif self.blocks[start - 1].file==None:
-                        print(f'Block {start-1} is unallocated')
-                        print('shift left')
+                        print(f'(From Contiguous Allocation): Block {start-1} is unallocated')
+                        print('(From Contiguous Allocation): shift left')
 
                         if length%2==0:
-                            print(f'Moving {num_of_blocks_to_move[0]} block(s)')
-                            print(f"Target is {start+(length//2)}")
+                            print(f'(From Contiguous Allocation): Moving {num_of_blocks_to_move[0]} block(s)')
+                            print(f"(From Contiguous Allocation): Target is {start+(length//2)}")
                             for i in range(start-1,target,1):
-                                print(f'moving block {i+1} to block {i}')
+                                print(f'(From Contiguous Allocation): moving block {i+1} to block {i}')
                                 self.blocks[i].file=self.blocks[i+1].file
                                 self.block_labels[i].config(bg="light blue")
                                 updated_indices.append(i)
@@ -849,10 +851,10 @@ class ContiguousAllocationBlockGUI(BlockGUI):
                                 reads=reads+1
                                 writes=writes+1
                         else:
-                            print(f'Moving {num_of_blocks_to_move[1]} block(s)')
-                            print(f"Target is {start+(length//2)}")
+                            print(f'(From Contiguous Allocation): Moving {num_of_blocks_to_move[1]} block(s)')
+                            print(f"(From Contiguous Allocation): Target is {start+(length//2)}")
                             for i in range(start+length,target,1):
-                                print(f'moving block {i+1} to block {i}')
+                                print(f'(From Contiguous Allocation): moving block {i+1} to block {i}')
                                 self.blocks[i].file=self.blocks[i+1].file
                                 self.block_labels[i].config(bg="light blue")
                                 updated_indices.append(i)
@@ -860,23 +862,23 @@ class ContiguousAllocationBlockGUI(BlockGUI):
                                 reads=reads+1
                                 writes=writes+1
                             
-                        print('Allocation space made, now insert at target')  
-                        self.blocks[target]=ContiguousAllocationBLOCK(file_name)
+                        print('(From Contiguous Allocation): Allocation space made, now insert at target')  
+                        self.blocks[target]=ContiguousAllocationBLOCK(file_name,target)
                         #self.blocks[target].file=file_name
-                        print(target)
+                        #print(target)
                         updated_indices.append(target)
                         writes=writes+1
-                        print(f'disk block {target} has {self.blocks[target].file}')
+                        print(f'(From Contiguous Allocation): disk block {target} has {self.blocks[target].file}')
                         messagebox.showinfo("Contiguous Allocation GUI", f"Block added for file '{file_name}' at position {target}")
 
                     else:
-                        print('no space')
+                        print('(From Contiguous Allocation): no space')
                         messagebox.showinfo()
 
-            print(f"Read:{reads} and Writes:{writes}")
+            print(f"(From Contiguous Allocation): Read:{reads} and Writes:{writes}")
             self.update_block_label(updated_indices)
             self.update_read_write_label()  # Update the reads and writes display
-            self.update_file_label()
+            ##self.update_filel()
 
             #pass  # Implement logic here later
 
@@ -888,10 +890,10 @@ class ContiguousAllocationBlockGUI(BlockGUI):
         target=None
 
         if position=="beginning":
-            print(f'remove block at {start}')
+            print(f'(From Contiguous Allocation): remove block at {start}')
             self.blocks[start]=None
             for i in range(start, start+length-1,1):
-                print(f'move block {i+1} to {i}')
+                print(f'(From Contiguous Allocation): move block {i+1} to {i}')
                 self.blocks[i]=self.blocks[i+1]
                 self.blocks[i+1]=None
                 updated_indices.append(i)
@@ -903,7 +905,7 @@ class ContiguousAllocationBlockGUI(BlockGUI):
             self.block_labels[start+length-1].config(bg="white")
             updated_indices.append(start+length-1)
 
-            print(f'block {start+length} is now {self.blocks[start + length-1]}')
+            print(f'(From Contiguous Allocation): block {start+length} is now {self.blocks[start + length-1]}')
 
 
         if position=="end":
@@ -916,7 +918,7 @@ class ContiguousAllocationBlockGUI(BlockGUI):
         
 
         if position=="middle":
-            print(f'remove block at {start+(length//2)}')
+            print(f'(From Contiguous Allocation): remove block at {start+(length//2)}')
             '''
             After removing we gotta move the blocks.   
             '''
@@ -924,7 +926,7 @@ class ContiguousAllocationBlockGUI(BlockGUI):
             self.blocks[target]=None
             messagebox.showinfo("Contiguous Allocation GUI", f"Removing block for file '{file_name}' at position {target}")
             for i in range(target, start+length-1,1):
-                print(f'move block {i+1} to {i}')
+                print(f'(From Contiguous Allocation): move block {i+1} to {i}')
                 self.blocks[i]=self.blocks[i+1]
                 self.blocks[i+1]=None
                 updated_indices.append(i)
@@ -933,15 +935,26 @@ class ContiguousAllocationBlockGUI(BlockGUI):
         self.blocks[start + length-1]=None
         self.block_labels[start+length-1].config(bg="white")
         updated_indices.append(start+length-1)
-        print(f'block {start+length-1} is now {self.blocks[start + length-1]}')
+        print(f'(From Contiguous Allocation): block {start+length-1} is now {self.blocks[start + length-1]}')
         length=length-1
-        print(f"Read:{reads} and Writes:{writes}")
+        print(f"(From Contiguous Allocation): Read:{reads} and Writes:{writes}")
         self.update_block_label(updated_indices)
         self.update_read_write_label()  # Update the reads and writes display
-        self.update_file_label()
+        ##self.update_filel()
+
+    def read(self,vpn):
+        # In Contiguous Allocation, each file occupies a contiguous block
+        block_id = vpn // 4  # Divide VPN by 4 to find the block index
+        address_index = vpn % 4  # Modulo to find the address within the block
+        block = self.blocks[block_id]
+        print(f"(From Contiguous Allocation): Contiguous Allocation: Read VPN {vpn} -> Block {block.block_id}, Address {block.addresses[address_index]}")
+        return block.addresses[address_index]
+
+
 if __name__ == "__main__":
     root = tk.Tk()
     app = ContiguousAllocationBlockGUI(root)
+    ret_value= app.read(5)
     root.mainloop()
         
 

@@ -11,6 +11,9 @@ sys.path.append(os.path.abspath(os.path.dirname(__file__)))
 from  indexed.gui_indexed import IndexedAllocationBlockGUI
 from contiguous.gui_contiguous import ContiguousAllocationBlockGUI
 from linked.gui_linked import LinkedAllocationBlockGUI
+import block
+
+
 
 class MainApp:
     def __init__(self, root):
@@ -18,7 +21,9 @@ class MainApp:
         self.root.title("Disk Block Management")
         self.root.geometry("1000x1000")
 
-        self.blocks = [None] * 32  # Placeholder for BLOCK objects
+        #self.blocks = [None] * 32  # Placeholder for BLOCK objects
+        # Create 32 blocks with 4 sequential addresses each
+        self.blocks = [block.BLOCK(block_id, block_id * 4) for block_id in range(32)]
 
         # Add a descriptive label at the top
         self.description_label = tk.Label(
@@ -49,6 +54,10 @@ class MainApp:
         self.update_button = tk.Button(self.root, text="Simulate Adding/Removing Block", state=tk.DISABLED, command=self.update_file)
         self.update_button.pack(pady=5)
 
+        # # File, action, position label
+        # self.file_label = tk.Label(self.root, text=f"File: {file_name} | Action: {action_type} | Position : {pos}")
+        # self.file_label.pack(pady=5)
+
         # Create the Notebook during initialization
         self.notebook = ttk.Notebook(self.root)
         self.notebook.pack(fill='both', expand=True, pady=10)
@@ -60,7 +69,7 @@ class MainApp:
         self.f3 = ttk.Frame(self.notebook)
 
     def load_entries(self):
-        print('load')
+        print('(From Storage): load')
 
         with open("linked/directory.json", "r") as f:
             self.directory_data = json.load(f)
@@ -79,11 +88,13 @@ class MainApp:
         self.notebook.add(self.f2, text='Linked Allocation')
         self.notebook.add(self.f3, text='Indexed Allocation')
 
+
         # Show the Notebook
         self.notebook.pack(fill='both', expand=True, pady=10)
 
         # Enable the Update button after loading
         self.update_button.config(state=tk.NORMAL)
+        self.load_button.pack_forget()
 
     def update_file(self):
         print('update file')
@@ -116,6 +127,7 @@ class MainApp:
 
         # Update button to confirm and call add/remove functions
         def confirm_update():
+            global file_name,pos,action_type
             file_name = selected_file.get()
             pos = position.get()
             action_type = action.get()
@@ -129,8 +141,11 @@ class MainApp:
             start = entry["start"]
             length = entry["length"]
 
-            print(f'start is {start}')
-            print(f'length is {length}')
+            print(f'(From Storage): file is {file_name}')
+            print(f'(From Storage): action_type is {action_type}')
+            print(f'(From Storage): position is {pos}')
+            print(f'(From Storage): start is {start}')
+            print(f'(From Storage): length is {length}')
 
             # Call add or remove function based on action_type
             if action_type == "Add":
@@ -144,10 +159,13 @@ class MainApp:
                 self.linked_gui.remove(file_name,start,length,pos)
                 self.indexed_gui.remove(file_name,start,length,pos)
 
+            #self.update_file_label()
             update_window.destroy()  # Close the update window
 
         update_button = tk.Button(update_window, text="Update File", command=confirm_update)
         update_button.grid(row=3, column=0, columnspan=4, pady=10)  # Adjusted position
+        self.update_button.pack_forget()
+        
 
         def add(file_name, start, length, position):
             pass
@@ -155,6 +173,9 @@ class MainApp:
         def remove(file_name, start, length, position):
             pass
 
+    #def update_file_label(self):
+        #self.file_label.config(text=f'File: {file_name} | Action: {action_type} | Position : {pos}')
+    
 
 # Run the main loop
 def main():
