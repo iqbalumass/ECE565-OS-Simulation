@@ -66,8 +66,8 @@ class IndexedAllocationBlockGUI(BlockGUI):
         # self.load_button.pack(pady=5)
         
         # Update Button (temporarily disabled)
-        self.update_button = tk.Button(self.root, text="Update Block", state=tk.DISABLED,command=self.update_file)
-        self.update_button.pack(pady=5)
+        # self.update_button = tk.Button(self.root, text="Update Block", state=tk.DISABLED,command=self.update_file)
+        # self.update_button.pack(pady=5)
 
         # Automatically load entries when initializing the GUI
         self.load_entries()  
@@ -116,7 +116,7 @@ class IndexedAllocationBlockGUI(BlockGUI):
             self.update_gui_blocks()
 
             # Enable the Update Button after loading entries
-            self.update_button.config(state=tk.NORMAL)
+            # self.update_button.config(state=tk.NORMAL)
 
         except FileNotFoundError:
             messagebox.showerror("Error", "block_entries.json file not found.")
@@ -170,8 +170,8 @@ class IndexedAllocationBlockGUI(BlockGUI):
             start = entry["start"]
             length = entry["length"]
 
-            print(f'start is {start}')
-            print(f'length is {length}')
+            # print(f'start is {start}')
+            # print(f'length is {length}')
 
             # Call add or remove function based on action_type
             if action_type == "Add":
@@ -339,7 +339,7 @@ class IndexedAllocationBlockGUI(BlockGUI):
         
         # Update label text with file and next block information
         if block:
-            label.config(text=f"Block {index}\nFile: {block.file or 'None'}\nNext: {block.next_block or 'None'}")
+            label.config(text=f"Block {index}\nFile: {block.file or 'None'}")
             
             if block.is_index_block:  # If the block is an index block, highlight it with a distinct color
                 label.config(bg="light green")  # Highlight index blocks in light green
@@ -348,7 +348,7 @@ class IndexedAllocationBlockGUI(BlockGUI):
             else:
                 label.config(bg="white")  # Reset background if the block is not in use
         else:
-            label.config(text=f"Block {index}\nFile: None\nNext: None")
+            label.config(text=f"Block {index}\nFile: None")
             label.config(bg="white")
 
     def update_gui_blocks(self):
@@ -385,8 +385,14 @@ class IndexedAllocationBlockGUI(BlockGUI):
         
         # Position the tooltip near the label
         x, y, _, _ = event.widget.bbox("insert")
-        self.tooltip.place(x=x + 10, y=y + 10)
+        #x=event.x_root
+        #y=event.y_root
+        
+        self.tooltip.place(x=x + 90, y=y + 90)
 
+        # Get the cursor's position relative to the widget
+        
+        
     def hide_tooltip(self, event=None):
         self.tooltip.place_forget()
 

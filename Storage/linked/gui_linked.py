@@ -57,8 +57,8 @@ class LinkedAllocationBlockGUI(BlockGUI):
         # self.load_button.pack(pady=5)
 
         # Update button (disabled initially)
-        self.update_button = tk.Button(self.root, text="Update File", state=tk.DISABLED, command=self.update_file)
-        self.update_button.pack(pady=5)
+        # self.update_button = tk.Button(self.root, text="Update File", state=tk.DISABLED, command=self.update_file)
+        # self.update_button.pack(pady=5)
         # Automatically load entries when initializing the GUI
         self.load_entries()  
 
@@ -90,11 +90,11 @@ class LinkedAllocationBlockGUI(BlockGUI):
             
             
             # Print indexes with null files
-            print("Blocks with null files:")
-            print(self.null_file_indexes)
+            # print("Blocks with null files:")
+            # print(self.null_file_indexes)
 
             # Enable the Update button after loading
-            self.update_button.config(state=tk.NORMAL)
+            # self.update_button.config(state=tk.NORMAL)
             # messagebox.showinfo("Linked Allocation GUI", "Block entries loaded from JSON.")
         
         except FileNotFoundError:

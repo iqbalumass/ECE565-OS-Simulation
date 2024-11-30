@@ -83,6 +83,7 @@ class MainApp:
         self.notebook.pack(fill='both', expand=True, pady=10)
 
         # Enable the Update button after loading
+        self.load_button.pack_forget()
         self.update_button.config(state=tk.NORMAL)
 
     def update_file(self):
@@ -148,6 +149,7 @@ class MainApp:
 
         update_button = tk.Button(update_window, text="Update File", command=confirm_update)
         update_button.grid(row=3, column=0, columnspan=4, pady=10)  # Adjusted position
+        self.update_button.pack_forget()
 
         def add(file_name, start, length, position):
             pass
