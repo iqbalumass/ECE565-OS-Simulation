@@ -106,6 +106,8 @@ class AddressTranslationGUI:
         offset = virtual_address % 16        # Lower 4 bits
         self.virtual_table.insert("", tk.END, values=(page_number, offset))
 
+        return virtual_address
+
     def update_fifo_queue(self, frame, physical_address):
         if frame not in self.fifo_queue:
             if len(self.fifo_queue) >= self.max_frames:
@@ -131,6 +133,12 @@ class AddressTranslationGUI:
                 tk.END, 
                 values=(f"{address_range_start}-{address_range_end}")
             )
+
+    def translateVirtualAddress(virtual_address):
+        
+        print(f"Translating virtual address {virtual_address} using memory management...")
+
+        return None
 
 root = tk.Tk()
 app = AddressTranslationGUI(root)
