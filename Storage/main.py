@@ -6,7 +6,11 @@ import sys
 import os
 
 
-sys.path.append(os.path.abspath(os.path.dirname(__file__)))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from paths import *
+print(PROJECT_ROOT)
+
+#sys.path.append(os.path.abspath(os.path.dirname(__file__)))
 # Import your specific GUI classes
 from  indexed.gui_indexed import IndexedAllocationBlockGUI
 from contiguous.gui_contiguous import ContiguousAllocationBlockGUI
@@ -71,7 +75,7 @@ class MainApp:
     def load_entries(self):
         print('(From Storage): load')
 
-        with open("linked/directory.json", "r") as f:
+        with open(DIRECTORY_PATH, "r") as f:
             self.directory_data = json.load(f)
 
         # Disable the Load button
