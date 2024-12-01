@@ -5,6 +5,8 @@ from tkinter import ttk
 
 import sys
 import os
+
+from paths import*
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from block import BLOCK, BlockGUI
 
@@ -68,10 +70,10 @@ class ContiguousAllocationBlockGUI(BlockGUI):
     def load_entries(self):
         try:
             
-            with open("contiguous/block_entries.json", "r") as file:
+            with open(BLOCK_ENTRIES_PATH, "r") as file:
                 data = json.load(file)
 
-            with open("contiguous/directory.json", "r") as f:
+            with open(DIRECTORY_PATH, "r") as f:
                 self.directory_data = json.load(f)
 
             # Set to track indexes where file is null

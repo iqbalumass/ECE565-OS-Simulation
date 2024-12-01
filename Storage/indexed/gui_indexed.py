@@ -3,11 +3,14 @@ from tkinter import StringVar, Toplevel, messagebox
 import json
 from tkinter import ttk
 
-
+from paths import *
 import sys
 import os
+
+
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from block import BLOCK, BlockGUI
+
 
 reads = 0
 writes = 0
@@ -80,10 +83,10 @@ class IndexedAllocationBlockGUI(BlockGUI):
 
     def load_entries(self):
         try:
-            with open("indexed/block_entries.json", "r") as file:
+            with open(BLOCK_ENTRIES_PATH, "r") as file:
                 block_entries_data = json.load(file)
 
-            with open("indexed/directory.json", "r") as f:
+            with open(DIRECTORY_PATH, "r") as f:
                 self.directory_data = json.load(f)
 
             self.indexed_allocation = {}
