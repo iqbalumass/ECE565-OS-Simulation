@@ -2,6 +2,26 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 import random
 
+import sys
+import os
+
+#Additional_line
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from paths import *
+
+
+print(PROJECT_ROOT)
+
+# Explicitly add the Storage directory to the path
+
+# Import your specific GUI classes
+from  Storage.indexed.gui_indexed import IndexedAllocationBlockGUI,IndexedAllocationBLOCK
+from Storage.contiguous.gui_contiguous import ContiguousAllocationBlockGUI
+from Storage.linked.gui_linked import LinkedAllocationBlockGUI
+
+
+from Storage.block import BLOCK, BlockGUI
+
 class AddressTranslationGUI:
     def __init__(self, root):
         self.root = root
@@ -91,7 +111,28 @@ class AddressTranslationGUI:
         if selected_item:
             # Retrieve frame number from selected row
             frame_number = self.page_table.item(selected_item, "values")[0]
-            print(f"Restored Frame Number: {frame_number}")
+            root = tk.Tk()
+            #app = MainApp(root)
+            '''
+            Feel free to use any. It is the same address, anyway
+            '''
+            #app=IndexedAllocationBlockGUI(root)
+            #return_frame=app.read(frame_number)
+            # app=ContiguousAllocationBlockGUI(root)
+            # return_frame=app.read(5)
+            app=LinkedAllocationBlockGUI(root)
+            return_frame=app.read(frame_number)
+            print(return_frame)
+            if return_frame >= 0:  # Assuming non-negative values are valid
+                # Update the Page Table row
+                values = self.page_table.item(selected_item, "values")
+                updated_values = list(values)
+                updated_values[-1] = "Valid"  # Assuming 'status' is the last column
+                self.page_table.item(selected_item, values=updated_values)
+                print("Status updated to Valid in the Page Table.")
+            else:
+                print("Returned frame is invalid.")
+            print(f"Restored Frame Number: {return_frame}")
         else:
             messagebox.showwarning("No Selection", "Please select a row from the Page Table to restore.")
 

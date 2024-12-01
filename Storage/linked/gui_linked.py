@@ -637,6 +637,7 @@ class LinkedAllocationBlockGUI(BlockGUI):
         #self.update_file_label()
 
     def read(self,vpn):
+        vpn = int(vpn)  
         # In Linked Allocation, we traverse the linked list of blocks
         current_block = self.blocks[vpn // 4]  # Start with the block corresponding to the VPN
         address_index = vpn % 4  # Modulo to find the address within the block
