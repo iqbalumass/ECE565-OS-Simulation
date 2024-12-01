@@ -2,20 +2,30 @@ import tkinter as tk
 from tkinter import ttk
 import matplotlib.pyplot as plt
 
+import sys
+import os
+
+# Add the project root directory to sys.path to ensure imports work correctly
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+from Memory.tlb_handler import TLB  # Import TLB class from Memory/tlb_handler.py
+
 # Global variables to hold process data and the current clock cycle
 process_data = []
 current_running_index = -1
 gantt_chart_data = []  # To store the Gantt chart data
 waiting_times = {}
 turnaround_times = {}
+# Initialize TLB
+tlb = TLB()
 
 # Load JSON Data
 def load_process_data():
     global process_data, waiting_times, turnaround_times
     process_data = [
-        {"ProcessID": 1, "BurstTime": 6, "Priority": 2, "RemainingTime": 6, "State": "Ready", "ProgramCounter": 2, "OpenFiles": 2, "AX": 10, "BX": 20},
-        {"ProcessID": 2, "BurstTime": 8, "Priority": 1, "RemainingTime": 8, "State": "Ready", "ProgramCounter": 3, "OpenFiles": 1, "AX": 15, "BX": 25},
-        {"ProcessID": 3, "BurstTime": 10, "Priority": 3, "RemainingTime": 10, "State": "Ready", "ProgramCounter": 4, "OpenFiles": 0, "AX": 5, "BX": 10},
+        {"ProcessID": 1, "BurstTime": 6, "Priority": 2, "RemainingTime": 6, "State": "Ready", "ProgramCounter": 2, "OpenFiles": 2, "AX": 10, "BX": 20, "virtualAddress": 213},
+        {"ProcessID": 2, "BurstTime": 8, "Priority": 1, "RemainingTime": 8, "State": "Ready", "ProgramCounter": 3, "OpenFiles": 1, "AX": 15, "BX": 25, "virtualAddress": 48},
+        {"ProcessID": 3, "BurstTime": 10, "Priority": 3, "RemainingTime": 10, "State": "Ready", "ProgramCounter": 4, "OpenFiles": 0, "AX": 5, "BX": 10, "virtualAddress": 193},
     ]
     for process in process_data:
         waiting_times[process["ProcessID"]] = 0
@@ -130,6 +140,15 @@ def next_clock_cycle():
     found_next_process = False
     for i in range(current_running_index + 1, len(process_data)):
         if process_data[i]["RemainingTime"] > 0:
+            virtual_address = process_data[i].get("virtualAddress", None)
+            if virtual_address is not None:
+                # Call TLB for the virtual address
+                physical_address = tlb.getMemory(virtual_address)
+                print(f"Testing with Virtual Address: {virtual_address}")
+                if physical_address is not None:
+                    print(f"Physical Address for Virtual Address {virtual_address}: {physical_address}")
+                else:
+                    print(f"TLB Miss: Translation failed for Virtual Address {virtual_address}")
             # Check if the process has a valid ProgramCounter
             if process_data[i].get("ProgramCounter", 0) <= 0:
                 # Move the process to Blocked state if ProgramCounter is invalid
